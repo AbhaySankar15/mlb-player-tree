@@ -1,0 +1,287 @@
+{
+ "checks": {
+  "explicit_graph_edges": 1648312,
+  "no_self_loops": true,
+  "degrees_match_explicit_graph": true,
+  "every_player_in_graph_once": true,
+  "component_count_matches_networkx": true,
+  "bfs_distances_match_networkx": true,
+  "tree_edges_are_real_teammate_edges_with_evidence": true,
+  "each_component_is_tree_N_minus_1_edges": true,
+  "root_has_max_degree": true,
+  "root_is_smallest_id_among_ties": true
+ },
+ "allChecksPassed": true,
+ "source": "SABR Lahman Baseball Database 2025 (released 2026-01-02)",
+ "years": [
+  1871,
+  2025
+ ],
+ "leagues": {
+  "AA": 85,
+  "AL": 1355,
+  "ANL": 6,
+  "EAS": 57,
+  "ECL": 42,
+  "EWL": 8,
+  "FL": 16,
+  "IND": 46,
+  "INT": 3,
+  "NA": 50,
+  "NAC": 7,
+  "NAL": 77,
+  "NL": 1579,
+  "NN2": 106,
+  "NNL": 94,
+  "NSL": 10,
+  "PL": 8,
+  "UA": 12,
+  "WES": 52
+ },
+ "membershipsByLeague": {
+  "AA": 1889,
+  "AL": 54243,
+  "ANL": 154,
+  "EAS": 1035,
+  "ECL": 917,
+  "EWL": 191,
+  "FL": 468,
+  "IND": 827,
+  "INT": 44,
+  "NA": 736,
+  "NAC": 105,
+  "NAL": 2114,
+  "NL": 59237,
+  "NN2": 2731,
+  "NNL": 2275,
+  "NSL": 237,
+  "PL": 148,
+  "UA": 334,
+  "WES": 827
+ },
+ "totalPlayers": 24011,
+ "totalTeamSeasons": 3613,
+ "totalMemberships": 128512,
+ "central": {
+  "playerId": "hillri01",
+  "name": "Rich Hill",
+  "years": "2005-2025",
+  "leagues": "AL,NL",
+  "uniqueTeammates": 944,
+  "depth": 0
+ },
+ "top20": [
+  {
+   "playerId": "hillri01",
+   "name": "Rich Hill",
+   "years": "2005-2025",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 944,
+   "depth": 0
+  },
+  {
+   "playerId": "jacksed01",
+   "name": "Edwin Jackson",
+   "years": "2003-2019",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 871,
+   "depth": 2
+  },
+  {
+   "playerId": "chaveje01",
+   "name": "Jesse Chavez",
+   "years": "2008-2025",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 858,
+   "depth": 1
+  },
+  {
+   "playerId": "mulhote01",
+   "name": "Terry Mulholland",
+   "years": "1986-2006",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 791,
+   "depth": 2
+  },
+  {
+   "playerId": "weathda01",
+   "name": "David Weathers",
+   "years": "1991-2009",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 762,
+   "depth": 2
+  },
+  {
+   "playerId": "clippty01",
+   "name": "Tyler Clippard",
+   "years": "2007-2022",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 750,
+   "depth": 1
+  },
+  {
+   "playerId": "roberda08",
+   "name": "David Robertson",
+   "years": "2008-2025",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 731,
+   "depth": 1
+  },
+  {
+   "playerId": "henderi01",
+   "name": "Rickey Henderson",
+   "years": "1979-2003",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 725,
+   "depth": 2
+  },
+  {
+   "playerId": "stairma01",
+   "name": "Matt Stairs",
+   "years": "1992-2011",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 725,
+   "depth": 2
+  },
+  {
+   "playerId": "perezol01",
+   "name": "Oliver Perez",
+   "years": "2002-2022",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 721,
+   "depth": 2
+  },
+  {
+   "playerId": "beltrca01",
+   "name": "Carlos Beltran",
+   "years": "1998-2017",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 719,
+   "depth": 1
+  },
+  {
+   "playerId": "colonba01",
+   "name": "Bartolo Colon",
+   "years": "1997-2018",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 717,
+   "depth": 2
+  },
+  {
+   "playerId": "maybica01",
+   "name": "Cameron Maybin",
+   "years": "2007-2021",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 717,
+   "depth": 1
+  },
+  {
+   "playerId": "urenajo01",
+   "name": "Jose Urena",
+   "years": "2015-2025",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 707,
+   "depth": 2
+  },
+  {
+   "playerId": "sierrru01",
+   "name": "Ruben Sierra",
+   "years": "1986-2006",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 704,
+   "depth": 2
+  },
+  {
+   "playerId": "hawkila01",
+   "name": "LaTroy Hawkins",
+   "years": "1995-2015",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 703,
+   "depth": 1
+  },
+  {
+   "playerId": "wrighja01",
+   "name": "Jamey Wright",
+   "years": "1996-2014",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 698,
+   "depth": 2
+  },
+  {
+   "playerId": "seaneru01",
+   "name": "Rudy Seanez",
+   "years": "1989-2008",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 687,
+   "depth": 2
+  },
+  {
+   "playerId": "rodnefe01",
+   "name": "Fernando Rodney",
+   "years": "2002-2019",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 686,
+   "depth": 2
+  },
+  {
+   "playerId": "mortoch02",
+   "name": "Charlie Morton",
+   "years": "2008-2025",
+   "leagues": "AL,NL",
+   "uniqueTeammates": 681,
+   "depth": 2
+  }
+ ],
+ "componentCount": 1,
+ "componentSizesTop5": [
+  24011
+ ],
+ "largestComponent": 24011,
+ "isolatedPlayers": 0,
+ "maximumSeparation": 10,
+ "negroLeaguesPlayersAny": 2834,
+ "negroLeaguesOnlyPlayers": 2784,
+ "representativePlayers": [
+  {
+   "playerId": "abercda01",
+   "name": "Frank Abercrombie",
+   "years": "1871-1871",
+   "leagues": "NA",
+   "uniqueTeammates": 11,
+   "depth": 9
+  },
+  {
+   "playerId": "youngco01",
+   "name": "Cole Young",
+   "years": "2025-2025",
+   "leagues": "AL",
+   "uniqueTeammates": 53,
+   "depth": 2
+  },
+  {
+   "playerId": "tayloca99",
+   "name": "Candy Jim Taylor",
+   "years": "1909-1942",
+   "leagues": "NAL,NN2,NNL,NSL,WES",
+   "uniqueTeammates": 484,
+   "depth": 5
+  },
+  {
+   "playerId": "bartowi01",
+   "name": "William Barton",
+   "years": "1891-1891",
+   "leagues": "IND",
+   "uniqueTeammates": 32,
+   "depth": 7
+  },
+  {
+   "playerId": "paigesa01",
+   "name": "Satchel Paige",
+   "years": "1927-1965",
+   "leagues": "AL,IND,NAL,NN2,NNL",
+   "uniqueTeammates": 524,
+   "depth": 4
+  }
+ ],
+ "validationSeconds": 3.5
+}
