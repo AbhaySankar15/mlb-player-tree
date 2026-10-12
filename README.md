@@ -1,6 +1,6 @@
 # MLB Player Tree
 
-Every major leaguer, connected through baseball history. An interactive map of **24,011 players (1871–2025, including the Negro Leagues)** from the SABR Lahman Baseball Database. Two players are connected when they appeared for the same team in the same season. The center is whoever has the most unique career teammates (computed from the data, currently Rich Hill with 944), and rings show degrees of separation. Static site, no backend.
+Every major leaguer, connected through baseball history. An interactive map of **24,011 players (1871–2025, including the Negro Leagues)** from the SABR Lahman Baseball Database. Two players are connected when they appeared for the same team in the same season. The center is whoever has the most unique career teammates (computed from the data, currently Rich Hill with 944), and rings show degrees of separation. Static site plus one small serverless function for the optional daily leaderboard.
 
 ## Features
 - **Radial tree** of all players with WebGL rendering (Sigma.js); zoom, pan, hover, select, path-to-center highlight, layer isolation from the legend.
@@ -42,7 +42,7 @@ Press `/` to search; select a player for the path trail, **View full profile**, 
 - Data ends with the 2025 season (2026 not imported).
 - Lahman Appearances omits 8 player/team/season rows that Batting has, so a few teammate links are missing (`docs/DATA_QUALITY.md`).
 - Negro Leagues records are incomplete; a missing membership means "not established by the source".
-- No global leaderboard (no server); stats and streaks live in the browser. Real-GPU frame rates were not measured.
+- The global daily leaderboard needs the Upstash Redis setup in `docs/DEPLOYMENT.md` (without it the game works and the board shows as not switched on). It is honor-system: scores are checked for consistency, not replayed. Streaks live in the browser. Real-GPU frame rates were not measured.
 
 ## Licenses
 Application code: MIT (`LICENSE`). Data in `public/data/` is derived from the SABR Lahman Baseball Database under CC BY-SA 3.0; Negro Leagues data is licensed from Seamheads.com. Credit: *Lahman Baseball Database, SABR*.

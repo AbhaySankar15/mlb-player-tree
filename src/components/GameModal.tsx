@@ -5,6 +5,9 @@ import { MAX_POINTS, ROUNDS, evaluateGuess, feedbackText, generateRound, mulberr
 import type { RostersState } from '../lib/useRosters'
 import { PlayerAvatar } from './Badges'
 import SearchBox from './SearchBox'
+import Leaderboard from './Leaderboard'
+import { loadNickname, saveNickname, submitScore } from '../lib/leaderboardApi'
+import { NAME_MAX, validateName } from '../lib/leaderboardRules'
 import {
   DAILY_DIFFICULTIES, challengeUrl, dailyFor, dateKey, dateSeed, emojiFor, loadGames, saveGame, shareText, summarize, type GameRecord,
 } from '../lib/dailyStats'
@@ -21,7 +24,7 @@ interface Props {
 }
 
 interface Done { solved: boolean; points: number; guess: number | null; wrong: number; hints: number }
-interface Play { mode: 'daily' | 'practice'; difficulties: Difficulty[]; seed: number; date: string }
+interface Play { mode: 'daily' | 'practice'; difficulties: Difficulty[]; seed: number; date: string; nickname?: string }
 type Stage = { kind: 'menu' } | ({ kind: 'play'; round: number; results: Done[] } & Play) | ({ kind: 'end'; results: Done[] } & Play)
 
 const isDebug = () => import.meta.env.DEV || new URLSearchParams(location.search).has('debug')
@@ -50,7 +53,7 @@ export default function GameModal({ data, rosters, initial, onClose, onShowOnGra
   const [games, setGames] = useState<GameRecord[]>(() => loadGames())
   const started = useRef(false)
 
-  const startDaily = useCallback(() => setStage({ kind: 'play', mode: 'daily', difficulties: DAILY_DIFFICULTIES, seed: dateSeed(today), date: today, round: 0, results: [] }), [today])
+  const startDaily = useCallback((nickname?: string) => setStage({ kind: 'play', mode: 'daily', difficulties: DAILY_DIFFICULTIES, seed: dateSeed(today), date: today, nickname, round: 0, results: [] }), [today])
   const startPractice = useCallback((d: Difficulty, seed = seedFromUrl()) =>
     setStage({ kind: 'play', mode: 'practice', difficulties: Array(ROUNDS).fill(d), seed, date: today, round: 0, results: [] }), [today])
 
@@ -58,7 +61,7 @@ export default function GameModal({ data, rosters, initial, onClose, onShowOnGra
   useEffect(() => {
     if (started.current || !initial || rosters.status !== 'ready') return
     started.current = true
-    if (initial.mode === 'daily') { if (!dailyFor(games, today)) startDaily() }
+    if (initial.mode === 'daily') { /* the menu asks for a nickname first */ }
     else startPractice(initial.difficulty, initial.seed)
   }, [initial, rosters.status, games, today, startDaily, startPractice])
 
@@ -80,7 +83,7 @@ export default function GameModal({ data, rosters, initial, onClose, onShowOnGra
         ) : rosters.status !== 'ready' ? (
           <div className="drawer-status" role="status"><div className="spinner small" />Loading rosters…</div>
         ) : stage.kind === 'menu' ? (
-          <Menu games={games} today={today} onDaily={startDaily} onPractice={(d) => startPractice(d)} />
+          <Menu games={games} today={today} autoPrompt={initial?.mode === 'daily'} onDaily={startDaily} onPractice={(d) => startPractice(d)} />
         ) : stage.kind === 'play' ? (
           <RoundView
             key={`${stage.mode}-${stage.round}-${stage.seed}`}
@@ -99,9 +102,19 @@ export default function GameModal({ data, rosters, initial, onClose, onShowOnGra
   )
 }
 
-function Menu({ games, today, onDaily, onPractice }: { games: GameRecord[]; today: string; onDaily: () => void; onPractice: (d: Difficulty) => void }) {
+function Menu({ games, today, autoPrompt, onDaily, onPractice }: { games: GameRecord[]; today: string; autoPrompt: boolean; onDaily: (nickname: string) => void; onPractice: (d: Difficulty) => void }) {
   const done = dailyFor(games, today)
   const stats = summarize(games, today)
+  const [asking, setAsking] = useState(autoPrompt && !done)
+  const [nick, setNick] = useState(loadNickname)
+  const [nickErr, setNickErr] = useState<string | null>(null)
+  const begin = () => {
+    const err = validateName(nick)
+    if (err) { setNickErr(err); return }
+    const clean = nick.trim().replace(/\s+/g, ' ')
+    saveNickname(clean)
+    onDaily(clean)
+  }
   return (
     <div className="modal-body">
       <p>You get two players who never shared a team-season, but <b>someone</b> played with both. Name any player who was a teammate of both.</p>
@@ -112,8 +125,21 @@ function Menu({ games, today, onDaily, onPractice }: { games: GameRecord[]; toda
           <b>Daily challenge · {today}</b>
           <div className="muted">{done ? `Played: ${done.score}/${done.max}  ${done.rounds.map(emojiFor).join('')}` : 'Same five rounds for everyone today, ramping easy → hard.'}</div>
         </div>
-        <button className="btn play" onClick={onDaily} disabled={!!done}>{done ? 'Done · back tomorrow' : 'Play daily'}</button>
+        <button className="btn play" onClick={() => setAsking(true)} disabled={!!done || asking}>{done ? 'Done · back tomorrow' : 'Play daily'}</button>
       </div>
+      {asking && !done && (
+        <form className="nick-form" onSubmit={(e) => { e.preventDefault(); begin() }}>
+          <label htmlFor="nick">Pick a nickname for the leaderboard (shown publicly)</label>
+          <div className="nick-row">
+            <input id="nick" className="search-input" value={nick} maxLength={NAME_MAX} autoFocus autoComplete="nickname" placeholder="e.g. Sandlot Sam"
+              aria-invalid={!!nickErr} aria-describedby="nick-err" onChange={(e) => { setNick(e.target.value); setNickErr(null) }} />
+            <button className="btn play" type="submit">Start</button>
+          </div>
+          <p id="nick-err" className="game-msg" role="alert">{nickErr}</p>
+          <p className="note">Your score is posted when you finish. Don&rsquo;t use your real name or personal information.</p>
+        </form>
+      )}
+      <Leaderboard date={today} me={loadNickname()} />
 
       <h3 className="mini-h">Practice</h3>
       <div className="diff-btns">
@@ -136,7 +162,7 @@ function Menu({ games, today, onDaily, onPractice }: { games: GameRecord[]; toda
           ))}
         </ol>
       )}
-      <p className="note">There is no online leaderboard: the app has no server, so scores and streaks stay in this browser. Share your result to compare with friends.</p>
+      <p className="note">Streaks and personal stats stay in this browser. Only your nickname and daily score are sent to the leaderboard.</p>
     </div>
   )
 }
@@ -235,6 +261,8 @@ function RoundView({ data, index, seed, stage, onFinish, onShowOnGraph }: {
   )
 }
 
+type Post = { kind: 'idle' } | { kind: 'sending' } | { kind: 'posted'; rank: number } | { kind: 'failed'; status: number; message: string }
+
 function End({ stage, today, onSaved, onAgain }: { stage: Extract<Stage, { kind: 'end' }>; today: string; onSaved: (g: GameRecord[]) => void; onAgain: () => void }) {
   const total = stage.results.reduce((s, r) => s + r.points, 0)
   const rec: GameRecord = useMemo(() => ({
@@ -246,6 +274,16 @@ function End({ stage, today, onSaved, onAgain }: { stage: Extract<Stage, { kind:
   const link = challengeUrl(location.href, { mode: stage.mode, difficulty: stage.difficulties[0], seed: stage.seed })
   const text = shareText(rec, link)
   const stats = summarize(loadGames(), today)
+  const [post, setPost] = useState<Post>({ kind: 'idle' })
+  const [nick, setNick] = useState(stage.nickname ?? loadNickname())
+  const [board, setBoard] = useState(0)
+
+  const post_ = useCallback(async (name: string) => {
+    setPost({ kind: 'sending' })
+    const r = await submitScore(stage.date, name, rec.rounds)
+    if (r.ok) { saveNickname(name); setNick(name); setPost({ kind: 'posted', rank: r.data.rank }); setBoard((n) => n + 1) }
+    else setPost({ kind: 'failed', status: r.status, message: r.message })
+  }, [stage.date, rec.rounds])
 
   useEffect(() => {
     if (saved.current) return
@@ -253,7 +291,8 @@ function End({ stage, today, onSaved, onAgain }: { stage: Extract<Stage, { kind:
     if (stage.mode === 'daily' && dailyFor(loadGames(), stage.date)) return // never record the daily twice
     saveGame(rec)
     onSaved(loadGames())
-  }, [rec, stage, onSaved])
+    if (stage.mode === 'daily' && stage.nickname) void post_(stage.nickname)
+  }, [rec, stage, onSaved, post_])
 
   const copy = async (what: string, value: string) => {
     try { await navigator.clipboard.writeText(value); setCopied(what) } catch { setCopied('manual') }
@@ -270,6 +309,22 @@ function End({ stage, today, onSaved, onAgain }: { stage: Extract<Stage, { kind:
         ))}
       </ol>
       <p className="muted">Daily streak: {stats.current} (best {stats.best})</p>
+      {stage.mode === 'daily' && (
+        <>
+          {post.kind === 'sending' && <p className="hint" role="status">Posting your score…</p>}
+          {post.kind === 'posted' && <p className="hint" role="status">Posted as <b>{nick}</b>: rank #{post.rank} today.</p>}
+          {post.kind === 'failed' && (
+            <form className="nick-form" onSubmit={(e) => { e.preventDefault(); const err = validateName(nick); if (err) setPost({ kind: 'failed', status: 400, message: err }); else void post_(nick.trim().replace(/\s+/g, ' ')) }}>
+              <p className="game-msg" role="alert">{post.message}</p>
+              <div className="nick-row">
+                <input className="search-input" value={nick} maxLength={NAME_MAX} aria-label="Nickname" onChange={(e) => setNick(e.target.value)} />
+                <button className="btn" type="submit">{post.status === 0 || post.status >= 500 ? 'Retry' : 'Submit'}</button>
+              </div>
+            </form>
+          )}
+          <Leaderboard date={stage.date} me={nick} refreshKey={board} />
+        </>
+      )}
       <div className="hint-row">
         <button className="btn" onClick={() => copy('result', text)}>Copy result</button>
         <button className="btn" onClick={() => copy('link', link)}>{stage.mode === 'daily' ? 'Copy daily link' : 'Copy challenge link'}</button>
