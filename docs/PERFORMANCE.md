@@ -23,3 +23,6 @@
 | `teams.json` | ~100 KB raw (fetched with the first profile) |
 | Profile build (`scripts/build_profiles.py`) | ~9.7 s |
 The initial page load is unchanged (profile data is not fetched until “View full profile”). Chunk fetch time on a real network was not measured.
+
+## Path finder (Commit 6)
+Roughly 5 ms per query in Node (100 cross-checked pairs plus data loading ran in ~0.5 s); the test suite asserts under 150 ms. Rosters load on first use. In-browser query latency on a real GPU machine was not separately measured.

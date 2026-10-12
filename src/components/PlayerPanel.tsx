@@ -30,9 +30,9 @@ export function InfoPanel({ data }: { data: GraphData }) {
   )
 }
 
-interface PanelProps { data: GraphData; selected: number; onClose: () => void; onSelect: (index: number) => void; onOpenProfile: () => void }
+interface PanelProps { data: GraphData; selected: number; onClose: () => void; onSelect: (index: number) => void; onOpenProfile: () => void; onPathFrom: () => void; onPathTo: () => void }
 
-export default function PlayerPanel({ data, selected, onClose, onSelect, onOpenProfile }: PanelProps) {
+export default function PlayerPanel({ data, selected, onClose, onSelect, onOpenProfile, onPathFrom, onPathTo }: PanelProps) {
   const p = getPlayer(data, selected)
   const parentName = p.parent >= 0 ? data.players.name[p.parent] : null
   const trail = pathToRoot(data.players.parent, selected)
@@ -57,6 +57,10 @@ export default function PlayerPanel({ data, selected, onClose, onSelect, onOpenP
         {ts && (<><dt>Shared team-season</dt><dd>{ts}</dd></>)}
       </dl>
       <button className="btn profile-btn" onClick={onOpenProfile}>View full profile</button>
+      <div className="pf-btns">
+        <button className="btn small" onClick={onPathFrom}>Path from here</button>
+        <button className="btn small" onClick={onPathTo}>Path to here</button>
+      </div>
       {trail.length > 1 && (
         <div className="trail">
           <h3>Path to {data.players.name[trail[trail.length - 1]]}</h3>

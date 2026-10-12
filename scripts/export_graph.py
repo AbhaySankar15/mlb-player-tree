@@ -74,6 +74,9 @@ def export(b, out="public/data/graph.json"):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
         json.dump(dict(meta=meta, teamSeasons=tsl, players=players), f, separators=(",", ":"))
+    # Rosters for client-side any-to-any shortest paths: ts[i] = sorted player indices on teamSeasons[i].
+    with open(os.path.join(os.path.dirname(out), "memberships.json"), "w") as f:
+        json.dump(dict(ts=[sorted(idx[p] for p in b["t2p"][t]) for t in tsl]), f, separators=(",", ":"))
     return meta
 
 

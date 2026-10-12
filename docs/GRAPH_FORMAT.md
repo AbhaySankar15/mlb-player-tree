@@ -25,3 +25,7 @@ Coordinates are precomputed (y grows downward is irrelevant; Sigma uses them as-
 `public/data/teams.json`: `{ bat:[stat names], pit:[stat names], chunk:400, name:[], w:[], l:[], rank:[] }`; `name/w/l/rank` are parallel to `graph.json` `teamSeasons`.
 
 `public/data/profiles/p<c>.json` with `c = floor(graphIndex / chunk)`: `{ "<playerID>": { bio:{nameGiven,birthYear,birthCity,birthState,birthCountry,deathYear,height,weight,bats,throws,debut,finalGame,bbrefID}, apps:[[teamSeasonIdx, G_all]], pos?:"P", bat?:[[teamSeasonIdx, ...bat stats]], pit?:[[teamSeasonIdx, ...pit stats]] } }`. Stats are in the order given by `teams.json` `bat`/`pit`; `null` means the source cell was empty.
+
+# Rosters (path finder)
+
+`public/data/memberships.json`: `{ "ts": [[playerIndex, ...], ...] }` where `ts[i]` lists the players (graph indices) on `teamSeasons[i]`. Same membership definition as the graph (Lahman Appearances). Loaded lazily the first time a path endpoint is chosen (719 KB raw, 226 KB gzip).

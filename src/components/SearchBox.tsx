@@ -6,9 +6,15 @@ import { buildSearchIndex, search } from '../lib/search'
 interface Props {
   data: GraphData
   onSelect: (index: number) => void
+  placeholder?: string
+  /** Externally controlled display text (a chosen player's name); null/'' clears the box. */
+  valueName?: string | null
+  onClear?: () => void
+  /** Only the main search owns the "/" shortcut. */
+  hotkey?: boolean
 }
 
-export default function SearchBox({ data, onSelect }: Props) {
+export default function SearchBox({ data, onSelect, placeholder = 'Search any player…  ( / )', valueName, onClear, hotkey = false }: Props) {
   const index = useMemo(() => buildSearchIndex(data), [data])
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -17,8 +23,13 @@ export default function SearchBox({ data, onSelect }: Props) {
   const listId = useId()
   const results = useMemo(() => search(index, query), [index, query])
 
+  useEffect(() => {
+    if (valueName !== undefined) setQuery(valueName ?? '')
+  }, [valueName])
+
   // "/" focuses search from anywhere (unless typing in a field already).
   useEffect(() => {
+    if (!hotkey) return
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (e.key === '/' && !(el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'))) {
@@ -28,7 +39,7 @@ export default function SearchBox({ data, onSelect }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [hotkey])
 
   const choose = (i: number) => {
     const r = results[i]
@@ -57,7 +68,7 @@ export default function SearchBox({ data, onSelect }: Props) {
         ref={input}
         className="search-input"
         type="search"
-        placeholder="Search any player…  ( / )"
+        placeholder={placeholder}
         aria-label="Search players"
         role="combobox"
         aria-expanded={showList}
@@ -66,7 +77,7 @@ export default function SearchBox({ data, onSelect }: Props) {
         autoComplete="off"
         spellCheck={false}
         value={query}
-        onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0) }}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0); if (!e.target.value && onClear) onClear() }}
         onFocus={(e) => { setOpen(true); e.currentTarget.select() }}
         onBlur={() => setOpen(false)}
         onKeyDown={onKeyDown}

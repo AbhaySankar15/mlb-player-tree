@@ -18,14 +18,16 @@ interface Props {
   data: GraphData
   selected: number | null
   focusDepth: number | null
+  /** Connection path (player indices) from the path finder, drawn above everything else. */
+  pathPlayers: number[] | null
   onSelect: (index: number | null) => void
 }
 
-const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ data, selected, focusDepth, onSelect }, ref) {
+const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ data, selected, focusDepth, pathPlayers, onSelect }, ref) {
   const container = useRef<HTMLDivElement>(null)
   const sigmaRef = useRef<Sigma | null>(null)
-  const state = useRef<{ selected: number | null; focusDepth: number | null; zoomedOut: boolean; nodes: Set<string>; edges: Set<string> }>({
-    selected: null, focusDepth: null, zoomedOut: true, nodes: new Set(), edges: new Set(),
+  const state = useRef<{ selected: number | null; focusDepth: number | null; zoomedOut: boolean; pfNodes: Set<string>; pfEdges: Set<string>; nodes: Set<string>; edges: Set<string> }>({
+    selected: null, focusDepth: null, zoomedOut: true, pfNodes: new Set(), pfEdges: new Set(), nodes: new Set(), edges: new Set(),
   })
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
@@ -83,6 +85,10 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       nodeReducer: (node, attrs) => {
         const st = state.current
         const isRoot = node === String(data.meta.rootIndex)
+        if (st.pfNodes.size) {
+          if (st.pfNodes.has(node)) return { ...attrs, size: 9, color: '#ffd23f', forceLabel: true, zIndex: 3 }
+          return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
+        }
         if (st.selected === null) {
           if (st.focusDepth === null) return isRoot ? { ...attrs, forceLabel: true } : attrs
           if (attrs.depth === st.focusDepth) return { ...attrs, size: Math.max(attrs.size * 1.6, 2.5), zIndex: 2 }
@@ -97,6 +103,9 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       },
       edgeReducer: (edge, attrs) => {
         const st = state.current
+        if (st.pfEdges.size) {
+          return st.pfEdges.has(edge) ? { ...attrs, color: '#ffd23f', size: 4, zIndex: 3, hidden: false } : { ...attrs, color: EDGE_DIM, hidden: st.zoomedOut && attrs.depth >= DEEP_EDGE_DEPTH }
+        }
         const deepHidden = st.zoomedOut && attrs.depth >= DEEP_EDGE_DEPTH
         if (st.selected === null) {
           if (st.focusDepth === null) return deepHidden ? { ...attrs, hidden: true } : attrs
@@ -152,6 +161,36 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       if (d) cam.animate({ x: d.x, y: d.y, ratio: Math.min(cam.getState().ratio, 0.2) }, { duration: 800, easing: 'cubicInOut' })
     }
   }, [selected, data])
+
+  // Path-finder overlay: add temporary edges (only where no tree edge exists), highlight, and frame the path.
+  useEffect(() => {
+    const sigma = sigmaRef.current
+    if (!sigma) return
+    const graph = sigma.getGraph()
+    const added: string[] = []
+    const st = state.current
+    st.pfNodes = new Set(); st.pfEdges = new Set()
+    if (pathPlayers && pathPlayers.length > 0) {
+      pathPlayers.forEach((p) => st.pfNodes.add(String(p)))
+      for (let k = 0; k + 1 < pathPlayers.length; k++) {
+        const a = String(pathPlayers[k]), b = String(pathPlayers[k + 1])
+        let key = graph.edge(a, b)
+        if (!key) { key = `pf${k}`; graph.addEdgeWithKey(key, a, b, { size: 4, color: '#ffd23f', depth: 0 }); added.push(key) }
+        st.pfEdges.add(key)
+      }
+      const pts = pathPlayers.map((p) => sigma.getNodeDisplayData(String(p))).filter((d): d is NonNullable<typeof d> => !!d)
+      if (pts.length) {
+        const xs = pts.map((d) => d.x), ys = pts.map((d) => d.y)
+        const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+        sigma.getCamera().animate(
+          { x: (Math.max(...xs) + Math.min(...xs)) / 2, y: (Math.max(...ys) + Math.min(...ys)) / 2, ratio: Math.min(1, Math.max(0.03, span * 1.5 + 0.02)) },
+          { duration: 900, easing: 'cubicInOut' },
+        )
+      }
+    }
+    sigma.refresh()
+    return () => { added.forEach((k) => { if (graph.hasEdge(k)) graph.dropEdge(k) }) }
+  }, [pathPlayers, data])
 
   useEffect(() => {
     state.current.focusDepth = focusDepth

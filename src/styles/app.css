@@ -108,3 +108,12 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .panel-title { display:flex; align-items:center; gap:10px; min-width:0; }
 .drawer-head { align-items:center; }
 .drawer-title { flex:1; min-width:0; }
+
+.pf-inputs { display:flex; flex-direction:column; gap:6px; align-items:stretch; }
+.pf-inputs .swap { align-self:center; padding:0 12px; }
+.pf-summary { margin:10px 0 6px; font-weight:700; color:var(--gold); font-size:13px; }
+.pf-path { list-style:none; margin:0 0 10px; padding:0 0 0 12px; border-left:2px solid var(--gold); display:flex; flex-direction:column; gap:6px; }
+.pf-path li { display:flex; flex-direction:column; }
+.pf-btns { display:flex; gap:8px; margin-top:8px; }
+.pf-btns .btn { flex:1; }
+.pathfinder h2 { font-size:13px; }
