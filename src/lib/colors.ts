@@ -26,7 +26,7 @@ export function depthColor(depth: number): string {
 }
 
 export function nodeSize(depth: number): number {
-  if (depth === 0) return 14
+  if (depth === 0) return 12
   if (depth === 1) return 2
   return Math.max(0.7, 1.7 - depth * 0.12)
 }

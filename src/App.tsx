@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GraphCanvas, { type GraphCanvasHandle } from './components/GraphCanvas'
 import Header from './components/Header'
-import ProfileDrawer from './components/ProfileDrawer'
 import SearchBox from './components/SearchBox'
 import GraphLegend from './components/GraphLegend'
 import PlayerPanel, { InfoPanel } from './components/PlayerPanel'
-import GameModal, { type GameStart } from './components/GameModal'
+import type { GameStart } from './components/GameModal'
 import PathFinder from './components/PathFinder'
 import { findPath } from './lib/pathfinder'
 import { useRosters } from './lib/useRosters'
+import { PlayerAvatar } from './components/Badges'
+import { depthColor } from './lib/colors'
 import { loadGraph } from './lib/loadGraph'
 import type { GraphData } from './types/graph'
+
+const GameModal = lazy(() => import('./components/GameModal'))
+const ProfileDrawer = lazy(() => import('./components/ProfileDrawer'))
 
 export default function App() {
   const [data, setData] = useState<GraphData | null>(null)
@@ -26,6 +30,7 @@ export default function App() {
     const seed = Number(q.get('seed')), d = q.get('difficulty')
     return q.has('seed') && Number.isFinite(seed) && (d === 'easy' || d === 'medium' || d === 'hard') ? { mode: 'practice', seed, difficulty: d } : null
   }, [])
+  const [sheetOpen, setSheetOpen] = useState(false) // mobile bottom sheet; ignored on desktop
   const [gameOpen, setGameOpen] = useState(initialGame !== null)
   const [focusDepth, setFocusDepth] = useState<number | null>(null)
   const canvas = useRef<GraphCanvasHandle>(null)
@@ -59,7 +64,18 @@ export default function App() {
       )}
       {data && (
         <>
-          <aside className="sidebar">
+          {selected !== null && !sheetOpen && (
+            <div className="selected-chip" role="status">
+              <PlayerAvatar id={data.players.id[selected]} name={data.players.name[selected]} size={30} ringColor={depthColor(data.players.depth[selected])} />
+              <span className="chip-name">{data.players.name[selected]}<small> · {data.players.depth[selected]} away</small></span>
+              <button className="btn small" onClick={() => setSheetOpen(true)}>Details</button>
+              <button className="btn small" onClick={() => setSelected(null)} aria-label="Deselect">✕</button>
+            </div>
+          )}
+          <aside className={`sidebar${sheetOpen ? ' open' : ''}`}>
+            <button className="sheet-handle" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} aria-label={sheetOpen ? 'Collapse menu' : 'Expand menu'}>
+              <span className="grip" />
+            </button>
             <SearchBox data={data} onSelect={setSelected} hotkey />
             <div className="toolbar">
               <button className="btn" onClick={() => canvas.current?.fit()}>Fit graph</button>
@@ -73,15 +89,17 @@ export default function App() {
             />
             <InfoPanel data={data} />
           </aside>
-          {selected !== null && profileOpen && (
-            <ProfileDrawer data={data} selected={selected} onClose={() => setProfileOpen(false)} />
-          )}
-          {gameOpen && (
+          <Suspense fallback={null}>
+            {selected !== null && profileOpen && (
+              <ProfileDrawer data={data} selected={selected} onClose={() => setProfileOpen(false)} />
+            )}
+          </Suspense>
+          <Suspense fallback={null}>{gameOpen && (
             <GameModal
               data={data} rosters={rosters} initial={initialGame} onClose={() => setGameOpen(false)}
               onShowOnGraph={(a, c) => { setPfA(a); setPfB(c); setGameOpen(false) }}
             />
-          )}
+          )}</Suspense>
           <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} />
         </>
       )}

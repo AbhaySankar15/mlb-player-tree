@@ -79,14 +79,16 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       },
       zIndex: true,
       hideEdgesOnMove: true,
-      zoomToSizeRatioFunction: (ratio) => Math.pow(ratio, 0.75),
-      minCameraRatio: 0.005,
+      hideLabelsOnMove: window.matchMedia?.('(pointer: coarse)').matches ?? false,
+      // Node size scales 1:1 with the layout, so lanes stay distinct instead of fusing into slabs when zooming in.
+      zoomToSizeRatioFunction: (ratio) => ratio,
+      minCameraRatio: 0.01,
       maxCameraRatio: 3,
       nodeReducer: (node, attrs) => {
         const st = state.current
         const isRoot = node === String(data.meta.rootIndex)
         if (st.pfNodes.size) {
-          if (st.pfNodes.has(node)) return { ...attrs, size: 9, color: '#ffd23f', forceLabel: true, zIndex: 3 }
+          if (st.pfNodes.has(node)) return { ...attrs, size: 6, color: '#ffd23f', forceLabel: true, zIndex: 3 }
           return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
         }
         if (st.selected === null) {
@@ -96,7 +98,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
         }
         if (st.nodes.has(node)) {
           const isSel = node === String(st.selected)
-          return { ...attrs, size: isSel ? 12 : Math.max(attrs.size * 1.8, 4), color: isSel ? '#ffffff' : attrs.color,
+          return { ...attrs, size: isSel ? 8 : Math.max(attrs.size * 1.6, 3), color: isSel ? '#ffffff' : attrs.color,
             forceLabel: true, zIndex: isSel ? 3 : 2, highlighted: isSel }
         }
         return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }

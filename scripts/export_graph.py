@@ -48,7 +48,7 @@ def export(b, out="public/data/graph.json"):
     idx = {p: i for i, p in enumerate(ids)}
     tsl = sorted(b["ts"].teamSeasonId)
     tidx = {t: i for i, t in enumerate(tsl)}
-    r2 = lambda v: round(v, 2)
+    r2 = lambda v: round(v, 1)  # 0.1 layout units (lane pitch is 4) keeps JSON ~5% smaller
     depthCounts = {}
     for d in b["dist"].values():
         depthCounts[d] = depthCounts.get(d, 0) + 1
