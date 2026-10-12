@@ -6,10 +6,10 @@ import { pathToRoot } from '../lib/pathToRoot'
 
 const fmt = (n: number) => n.toLocaleString('en-US')
 
-export function InfoPanel({ data }: { data: GraphData }) {
+export function InfoPanel({ data, className = '' }: { data: GraphData; className?: string }) {
   const m = data.meta
   return (
-    <section className="panel">
+    <section className={`panel ${className}`.trim()}>
       <h2>About this graph</h2>
       <dl>
         <dt>Total players</dt><dd>{fmt(m.totalPlayers)}</dd>

@@ -87,8 +87,9 @@ export default function App() {
               data={data} a={pfA} b={pfB} rosters={rosters} found={found} onA={setPfA} onB={setPfB}
               onSelectPlayer={setSelected} onRetry={() => setRosterRetry((n) => n + 1)}
             />
-            <InfoPanel data={data} />
+            <InfoPanel data={data} className="about-mobile" />
           </aside>
+          <InfoPanel data={data} className="about-panel" />
           <Suspense fallback={null}>
             {selected !== null && profileOpen && (
               <ProfileDrawer data={data} selected={selected} onClose={() => setProfileOpen(false)} />
