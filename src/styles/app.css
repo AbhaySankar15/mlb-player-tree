@@ -73,6 +73,8 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .legend-title { color:var(--muted); margin-bottom:6px; }
 .legend-row { display:flex; align-items:center; gap:8px; margin:1px -6px; padding:2px 6px; border-radius:5px; cursor:default; transition:background .12s; }
 .legend-row:hover, .legend-row.active { background:rgba(255,255,255,.09); }
+.legend-toggle { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:11.5px; color:var(--text); cursor:pointer; }
+.legend-toggle input { accent-color:var(--gold); }
 .legend-hint { margin-top:6px; font-size:10.5px; color:var(--muted); }
 .swatch { width:12px; height:12px; border-radius:50%; display:inline-block; }
 .overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
@@ -175,7 +177,7 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
   .search-results li { padding:10px; }
   /* Compact legend strip under the header */
   .legend { top:52px; left:10px; right:10px; bottom:auto; max-width:none; display:flex; flex-wrap:wrap; gap:2px 8px; padding:6px 8px; }
-  .legend-title, .legend-hint { display:none; }
+  .legend-title, .legend-hint, .legend-toggle { display:none; }
   .legend-row { margin:0; padding:2px 4px; min-height:0; font-size:11px; }
   .swatch { width:10px; height:10px; }
   .drawer { width:100vw; }

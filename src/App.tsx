@@ -33,6 +33,7 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false) // mobile bottom sheet; ignored on desktop
   const [gameOpen, setGameOpen] = useState(initialGame !== null)
   const [focusDepth, setFocusDepth] = useState<number | null>(null)
+  const [classic, setClassic] = useState(false)
   const canvas = useRef<GraphCanvasHandle>(null)
 
   const load = useCallback(() => {
@@ -50,7 +51,7 @@ export default function App() {
 
   return (
     <div className="app">
-      {data && <GraphCanvas ref={canvas} data={data} selected={selected} focusDepth={focusDepth} pathPlayers={found ? found.players : null} onSelect={setSelected} />}
+      {data && <GraphCanvas ref={canvas} data={data} selected={selected} focusDepth={focusDepth} classic={classic} pathPlayers={found ? found.players : null} onSelect={setSelected} />}
       <Header />
       {!data && !error && (
         <div className="overlay" role="status"><div className="spinner" />Loading players…</div>
@@ -101,7 +102,7 @@ export default function App() {
               onShowOnGraph={(a, c) => { setPfA(a); setPfB(c); setGameOpen(false) }}
             />
           )}</Suspense>
-          <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} />
+          <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} classic={classic} onClassic={setClassic} />
         </>
       )}
     </div>

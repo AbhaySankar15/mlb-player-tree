@@ -3,6 +3,7 @@ import Graph from 'graphology'
 import Sigma from 'sigma'
 import type { GraphData } from '../types/graph'
 import { pathToRoot } from '../lib/pathToRoot'
+import { COARSE_CELL, FINE_CELL, buildClusters, clusterRadius, detailFor, type Detail } from '../lib/clusters'
 import { DIM_NODE, EDGE_DIM, FOCUS_DIM_NODE, PATH_COLOR, ROOT_COLOR, depthColor, edgeColor, edgeColorFocused, nodeSize } from '../lib/colors'
 
 /** Camera animation length; 0 when the user prefers reduced motion. */
@@ -13,25 +14,32 @@ export interface GraphCanvasHandle {
   resetToRoot: () => void
 }
 
-/** Edges to nodes at this depth or deeper are hidden while the camera is zoomed out (unless on the selected path). */
+const CLUSTER_PREFIX = 'c'
+/** Classic view only: links to nodes this deep are hidden while zoomed out. */
 const DEEP_EDGE_DEPTH = 3
 const ZOOM_REVEAL_RATIO = 0.35
+/** Camera ratio to zoom to when a bubble is clicked: just inside the next detail level. */
+const ZOOM_INTO: Record<'coarse' | 'fine', number> = { coarse: 0.45, fine: 0.18 }
 
 interface Props {
   data: GraphData
   selected: number | null
   focusDepth: number | null
+  /** Classic view: every dot and every link at all zoom levels. */
+  classic: boolean
   /** Connection path (player indices) from the path finder, drawn above everything else. */
   pathPlayers: number[] | null
   onSelect: (index: number | null) => void
 }
 
-const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ data, selected, focusDepth, pathPlayers, onSelect }, ref) {
+const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ data, selected, focusDepth, classic, pathPlayers, onSelect }, ref) {
   const container = useRef<HTMLDivElement>(null)
   const sigmaRef = useRef<Sigma | null>(null)
-  const state = useRef<{ selected: number | null; focusDepth: number | null; zoomedOut: boolean; pfNodes: Set<string>; pfEdges: Set<string>; nodes: Set<string>; edges: Set<string> }>({
-    selected: null, focusDepth: null, zoomedOut: true, pfNodes: new Set(), pfEdges: new Set(), nodes: new Set(), edges: new Set(),
+  const state = useRef<{ selected: number | null; focusDepth: number | null; classic: boolean; ratio: number; hover: string | null; pfNodes: Set<string>; pfEdges: Set<string>; nodes: Set<string>; edges: Set<string>; hoverEdges: Set<string> }>({
+    selected: null, focusDepth: null, classic: false, ratio: 1, hover: null, pfNodes: new Set(), pfEdges: new Set(), nodes: new Set(), edges: new Set(), hoverEdges: new Set(),
   })
+  /** Detail level in effect: classic mode and the legend's layer isolation always use individual dots. */
+  const detailNow = (): Detail => (state.current.classic || state.current.focusDepth !== null ? 'full' : detailFor(state.current.ratio))
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -61,6 +69,27 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       if (p.parent[i] >= 0) graph.addEdgeWithKey(`e${i}`, String(p.parent[i]), String(i), { size: 0.4, color: edgeColor(p.depth[i]), depth: p.depth[i] })
     }
 
+    // Level-of-detail bubbles (one per occupied grid cell), shown instead of the 24k dots when zoomed out.
+    const levels: [number, string][] = [[COARSE_CELL, 'coarse'], [FINE_CELL, 'fine']]
+    for (const [cell, level] of levels) {
+      const cs = buildClusters(p.x, p.y, p.depth, cell, data.meta.maximumSeparation)
+      const maxCount = cs.reduce((m, c) => Math.max(m, c.count), 1)
+      cs.forEach((c, k) => graph.addNode(`${CLUSTER_PREFIX}${level}_${k}`, {
+        x: c.x, y: c.y, size: clusterRadius(c.count, maxCount, cell), color: depthColor(c.depth), depth: c.depth,
+        cluster: level, count: c.count, label: `${c.count.toLocaleString()} player${c.count === 1 ? '' : 's'} (mostly ${c.depth === 0 ? 'the center' : `${c.depth} degree${c.depth === 1 ? '' : 's'} out`}). Click to zoom in`,
+      }))
+    }
+    // Tree neighbours of each player, for showing a hovered player's own links.
+    const childHead = new Int32Array(data.count).fill(-1), childNext = new Int32Array(data.count).fill(-1)
+    for (let i = 0; i < data.count; i++) { const q = p.parent[i]; if (q >= 0) { childNext[i] = childHead[q]; childHead[q] = i } }
+    const linksOf = (i: number) => {
+      const out = new Set<string>()
+      if (p.parent[i] >= 0) out.add(`e${i}`)
+      for (let c = childHead[i]; c >= 0; c = childNext[c]) out.add(`e${c}`)
+      return out
+    }
+
+    const rootKey = String(data.meta.rootIndex)
     const sigma = new Sigma(graph, container.current, {
       renderEdgeLabels: false,
       // Names stay hidden until a player is selected, searched, or part of a found path (those use forceLabel); hover still shows a tag.
@@ -90,6 +119,22 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       maxCameraRatio: 3,
       nodeReducer: (node, attrs) => {
         const st = state.current
+        const detail = detailNow()
+        const picked = st.pfNodes.size > 0 || st.selected !== null
+        if (attrs.cluster) {
+          if (attrs.cluster !== detail) return { ...attrs, hidden: true }
+          return picked ? { ...attrs, color: DIM_NODE, zIndex: 0 } : attrs
+        }
+        if (detail !== 'full') {
+          // Zoomed out: individual dots stay hidden except the center, the selection and its path, and a found path.
+          if (st.pfNodes.has(node)) return { ...attrs, size: 6, color: '#ffd23f', forceLabel: true, zIndex: 3 }
+          if (st.pfNodes.size === 0 && st.selected !== null && st.nodes.has(node)) {
+            const isSel = node === String(st.selected)
+            return { ...attrs, size: isSel ? 8 : Math.max(attrs.size * 1.6, 3), color: isSel ? '#ffffff' : attrs.color, forceLabel: isSel, zIndex: isSel ? 3 : 2, highlighted: isSel }
+          }
+          if (node === rootKey) return { ...attrs, zIndex: 3 }
+          return { ...attrs, hidden: true }
+        }
         if (st.pfNodes.size) {
           if (st.pfNodes.has(node)) return { ...attrs, size: 6, color: '#ffd23f', forceLabel: true, zIndex: 3 }
           return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
@@ -106,32 +151,58 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
         }
         return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
       },
+      // Links are hidden unless they belong to the selection, a hovered player, a found path or an isolated layer (or classic view).
       edgeReducer: (edge, attrs) => {
         const st = state.current
         if (st.pfEdges.size) {
-          return st.pfEdges.has(edge) ? { ...attrs, color: '#ffd23f', size: 4, zIndex: 3, hidden: false } : { ...attrs, color: EDGE_DIM, hidden: st.zoomedOut && attrs.depth >= DEEP_EDGE_DEPTH }
-        }
-        const deepHidden = st.zoomedOut && attrs.depth >= DEEP_EDGE_DEPTH
-        if (st.selected === null) {
-          if (st.focusDepth === null) return deepHidden ? { ...attrs, hidden: true } : attrs
-          if (attrs.depth === st.focusDepth) return { ...attrs, color: edgeColorFocused(attrs.depth), zIndex: 1 }
-          return deepHidden ? { ...attrs, hidden: true } : { ...attrs, color: EDGE_DIM }
+          if (st.pfEdges.has(edge)) return { ...attrs, color: '#ffd23f', size: 4, zIndex: 3, hidden: false }
+          return st.classic ? { ...attrs, color: EDGE_DIM, hidden: st.ratio > ZOOM_REVEAL_RATIO && attrs.depth >= DEEP_EDGE_DEPTH } : { ...attrs, hidden: true }
         }
         if (st.edges.has(edge)) return { ...attrs, color: PATH_COLOR, size: 3, zIndex: 2 }
-        return deepHidden ? { ...attrs, hidden: true } : { ...attrs, color: EDGE_DIM, zIndex: 0 }
+        if (st.hoverEdges.has(edge)) return { ...attrs, color: edgeColorFocused(attrs.depth), size: 1, zIndex: 1 }
+        if (st.focusDepth !== null && attrs.depth === st.focusDepth) return { ...attrs, color: edgeColorFocused(attrs.depth), zIndex: 1 }
+        if (!st.classic) return { ...attrs, hidden: true }
+        const deepHidden = st.ratio > ZOOM_REVEAL_RATIO && attrs.depth >= DEEP_EDGE_DEPTH
+        if (st.selected !== null || st.focusDepth !== null) return deepHidden ? { ...attrs, hidden: true } : { ...attrs, color: EDGE_DIM, zIndex: 0 }
+        return deepHidden ? { ...attrs, hidden: true } : attrs
       },
     })
     sigmaRef.current = sigma
 
-    sigma.on('clickNode', ({ node }) => onSelectRef.current(Number(node)))
+    sigma.on('clickNode', ({ node }) => {
+      const a = graph.getNodeAttributes(node)
+      if (a.cluster) { // a bubble: zoom in to reveal what it holds
+        const d = sigma.getNodeDisplayData(node)
+        if (d) sigma.getCamera().animate({ x: d.x, y: d.y, ratio: ZOOM_INTO[a.cluster as 'coarse' | 'fine'] }, { duration: dur(700), easing: 'cubicInOut' })
+        return
+      }
+      onSelectRef.current(Number(node))
+    })
     sigma.on('clickStage', () => onSelectRef.current(null))
-    sigma.on('enterNode', () => { if (container.current) container.current.style.cursor = 'pointer' })
-    sigma.on('leaveNode', () => { if (container.current) container.current.style.cursor = '' })
+    sigma.on('enterNode', ({ node }) => {
+      if (container.current) container.current.style.cursor = 'pointer'
+      if (graph.getNodeAttribute(node, 'cluster') || detailNow() !== 'full') return
+      state.current.hover = node
+      state.current.hoverEdges = linksOf(Number(node))
+      sigma.refresh({ skipIndexation: true })
+    })
+    sigma.on('leaveNode', () => {
+      if (container.current) container.current.style.cursor = ''
+      if (state.current.hover === null) return
+      state.current.hover = null
+      state.current.hoverEdges = new Set()
+      sigma.refresh({ skipIndexation: true })
+    })
     // Intro: start slightly zoomed out and ease into the fitted view.
     const cam = sigma.getCamera()
     cam.on('updated', ({ ratio }) => {
-      const out = ratio > ZOOM_REVEAL_RATIO
-      if (out !== state.current.zoomedOut) { state.current.zoomedOut = out; sigma.refresh() }
+      const st = state.current
+      const before = `${detailNow()}${st.ratio > ZOOM_REVEAL_RATIO}`
+      st.ratio = ratio
+      if (`${detailNow()}${ratio > ZOOM_REVEAL_RATIO}` !== before) {
+        st.hover = null; st.hoverEdges = new Set()
+        sigma.refresh({ skipIndexation: true })
+      }
     })
     cam.setState({ ...cam.getState(), ratio: 1.8 })
     cam.animate({ ratio: 1 }, { duration: dur(1400), easing: 'cubicOut' })
@@ -196,6 +267,11 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
     sigma.refresh()
     return () => { added.forEach((k) => { if (graph.hasEdge(k)) graph.dropEdge(k) }) }
   }, [pathPlayers, data])
+
+  useEffect(() => {
+    state.current.classic = classic
+    sigmaRef.current?.refresh()
+  }, [classic])
 
   useEffect(() => {
     state.current.focusDepth = focusDepth

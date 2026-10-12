@@ -4,9 +4,11 @@ interface Props {
   maxDepth: number
   focusDepth: number | null
   onFocus: (depth: number | null) => void
+  classic: boolean
+  onClassic: (on: boolean) => void
 }
 
-export default function GraphLegend({ maxDepth, focusDepth, onFocus }: Props) {
+export default function GraphLegend({ maxDepth, focusDepth, onFocus, classic, onClassic }: Props) {
   return (
     <aside className="legend" aria-label="Degrees of separation legend">
       <div className="legend-title">Degrees of separation</div>
@@ -24,7 +26,10 @@ export default function GraphLegend({ maxDepth, focusDepth, onFocus }: Props) {
           {d === 0 ? 'Root' : d}
         </div>
       ))}
-      <div className="legend-hint">Hover a row to isolate a layer. Zoom in to reveal outer-layer links.</div>
+      <div className="legend-hint">Bubbles show how many players are in an area: click one to zoom in. Hover or select a dot to see its links. Hover a row to isolate a layer.</div>
+      <label className="legend-toggle">
+        <input type="checkbox" checked={classic} onChange={(e) => onClassic(e.target.checked)} /> Show every dot and link
+      </label>
     </aside>
   )
 }

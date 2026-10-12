@@ -3,7 +3,7 @@
 Every major leaguer, connected through baseball history. An interactive map of **24,011 players (1871–2025, including the Negro Leagues)** from the SABR Lahman Baseball Database. Two players are connected when they appeared for the same team in the same season. The center is whoever has the most unique career teammates (computed from the data, currently Rich Hill with 944), and rings show degrees of separation. Static site plus one small serverless function for the optional daily leaderboard.
 
 ## Features
-- **Radial tree** of all players with WebGL rendering (Sigma.js); zoom, pan, hover, select, path-to-center highlight, layer isolation from the legend.
+- **Radial tree** of all players with WebGL rendering (Sigma.js); zoom, pan, hover, select, path-to-center highlight, layer isolation from the legend. Zoomed out it shows density bubbles (click one to zoom in) that split into individual dots; names and links appear only for the selected, hovered or searched player, with a "Show every dot and link" switch for the full classic view.
 - **Search** any player by name or playerID (accent- and order-insensitive).
 - **Profiles:** bio, teams (with full historical names), career batting/pitching totals, season-by-season lines.
 - **Path finder:** the shortest teammate chain between any two players, drawn on the graph.
@@ -33,7 +33,7 @@ npm run verify    # tsc, vitest, pytest, production build
 Python tests cover the graph algorithms on synthetic data and real-data invariants; the validation script cross-checks everything against an explicit networkx teammate graph.
 
 ## Using the graph
-Press `/` to search; select a player for the path trail, **View full profile**, and **Path from/to here**. “Connect two players” finds the shortest chain. “Play: Name the link” starts the game. Hover a legend row to isolate a layer; edges beyond the third layer appear as you zoom in. On phones, tap the sheet handle to expand the menu; tapping a player shows a chip with a Details button.
+Press `/` to search; select a player for the path trail, **View full profile**, and **Path from/to here**. “Connect two players” finds the shortest chain. “Play: Name the link” starts the game. Hover a legend row to isolate a layer. Links are hidden until you hover or select a dot; tick “Show every dot and link” in the legend for the classic view. On phones, tap the sheet handle to expand the menu; tapping a player shows a chip with a Details button.
 
 ## Documentation
 `docs/`: `DATA_SOURCES.md` (sources, licenses), `DATA_QUALITY.md` (limitations), `GRAPH_ALGORITHM.md`, `GRAPH_FORMAT.md`, `GAME.md`, `IMAGES.md`, `PERFORMANCE.md` (measurements and caveats), `DEPLOYMENT.md`, `VALIDATION_REPORT.md`.
