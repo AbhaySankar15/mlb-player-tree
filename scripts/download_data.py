@@ -1,8 +1,9 @@
-"""Download Lahman 2025 CSVs (People, Appearances, Teams, readme) from SABR's official Box share into data/raw/."""
+"""Download Lahman 2025 CSVs (People, Appearances, Teams, Batting, Pitching) from SABR's official Box share into data/raw/."""
 import os, sys, urllib.request
 
 SHARE = "y1prhc795jk8zvmelfd3jq7tl389y6cd"  # https://sabr.box.com/s/<SHARE>, linked from https://sabr.org/lahman-database/
-FILES = {"Appearances.csv": "f_2084267195632", "People.csv": "f_2084263017537", "Teams.csv": "f_2084266946255"}
+FILES = {"Appearances.csv": "f_2084267195632", "People.csv": "f_2084263017537", "Teams.csv": "f_2084266946255",
+         "Batting.csv": "f_2084272468053", "Pitching.csv": "f_2084261668691"}
 URL = "https://sabr.box.com/index.php?rm=box_download_shared_file&shared_name=%s&file_id=%s"
 
 

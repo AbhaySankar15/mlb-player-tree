@@ -2,7 +2,7 @@
 
 ## SABR Lahman Baseball Database, version 2025
 - Official page: https://sabr.org/lahman-database/ — "Version 2025, released January 2, 2026" (stats 1871–2025, incl. Negro Leagues; CSV byte-order markers updated Feb 18, 2026).
-- Files used: `Appearances.csv` (player–team–season membership), `People.csv` (names), `Teams.csv` (team names). Downloaded by `scripts/download_data.py` from SABR's official Box share linked on that page, into `data/raw/` (git-ignored, ~7 MB).
+- Files used: `Appearances.csv` (player–team–season membership and games by position), `People.csv` (names and bio), `Teams.csv` (team names, W–L, rank), `Batting.csv` and `Pitching.csv` (profile statistics only; they do not define graph memberships). Downloaded by `scripts/download_data.py` from SABR's official Box share linked on that page, into `data/raw/` (git-ignored, ~15 MB).
 - Verified schema: Appearances = `yearID, teamID, lgID, playerID, G_all, ...` (one row per player/team/season; no duplicate keys found). Every Appearances player exists in People. The league code `NA` (National Association 1871–75) is read with `keep_default_na=False` so it is not parsed as missing.
 - **License:** Creative Commons Attribution-ShareAlike 3.0 Unported (per the release readme §0.1). Derived data in `public/data/graph.json` is therefore shared under CC BY-SA 3.0; original application code is separate (see README). Required credit: "Lahman Baseball Database, SABR; Negro Leagues data licensed from Seamheads.com".
 - **Negro Leagues:** licensed from Seamheads.com (https://www.seamheads.com/NegroLgs/), major Negro Leagues through the 1948 Negro American and National League seasons, following SABR's Negro Leagues Researchers & Authors Group recommendations.

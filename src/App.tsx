@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import GraphCanvas, { type GraphCanvasHandle } from './components/GraphCanvas'
 import Header from './components/Header'
+import ProfileDrawer from './components/ProfileDrawer'
 import SearchBox from './components/SearchBox'
 import GraphLegend from './components/GraphLegend'
 import PlayerPanel, { InfoPanel } from './components/PlayerPanel'
@@ -11,6 +12,7 @@ export default function App() {
   const [data, setData] = useState<GraphData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<number | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [focusDepth, setFocusDepth] = useState<number | null>(null)
   const canvas = useRef<GraphCanvasHandle>(null)
 
@@ -43,9 +45,12 @@ export default function App() {
               <button className="btn" onClick={() => canvas.current?.fit()}>Fit graph</button>
               <button className="btn" onClick={() => canvas.current?.resetToRoot()}>Reset to center (root)</button>
             </div>
-            {selected !== null && <PlayerPanel data={data} selected={selected} onClose={() => setSelected(null)} onSelect={setSelected} />}
+            {selected !== null && <PlayerPanel data={data} selected={selected} onClose={() => setSelected(null)} onSelect={setSelected} onOpenProfile={() => setProfileOpen(true)} />}
             <InfoPanel data={data} />
           </aside>
+          {selected !== null && profileOpen && (
+            <ProfileDrawer data={data} selected={selected} onClose={() => setProfileOpen(false)} />
+          )}
           <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} />
         </>
       )}

@@ -19,3 +19,9 @@ Columnar JSON. Node index = array position `i`; all `players.*` arrays have equa
 ```
 Tree edges: for every i with parent[i] >= 0 the edge (parent[i], i). Edge count = N - componentCount.
 Coordinates are precomputed (y grows downward is irrelevant; Sigma uses them as-is). Main component is centered at (0,0).
+
+# Profile data (lazy-loaded)
+
+`public/data/teams.json`: `{ bat:[stat names], pit:[stat names], chunk:400, name:[], w:[], l:[], rank:[] }`; `name/w/l/rank` are parallel to `graph.json` `teamSeasons`.
+
+`public/data/profiles/p<c>.json` with `c = floor(graphIndex / chunk)`: `{ "<playerID>": { bio:{nameGiven,birthYear,birthCity,birthState,birthCountry,deathYear,height,weight,bats,throws,debut,finalGame,bbrefID}, apps:[[teamSeasonIdx, G_all]], pos?:"P", bat?:[[teamSeasonIdx, ...bat stats]], pit?:[[teamSeasonIdx, ...pit stats]] } }`. Stats are in the order given by `teams.json` `bat`/`pit`; `null` means the source cell was empty.

@@ -14,3 +14,12 @@
 | Wheel zoom / drag pan / fit / reset / Esc | worked (functional check) |
 
 **Caveat:** the browser ran with SwiftShader software WebGL (no GPU), so frame times are pessimistic: ~0.89 s per forced refresh while zooming. Real-GPU frame rate was **not measured**. Total process memory (beyond JS heap) was not measured. Run `npm run preview` in a normal browser to judge smoothness.
+
+## Profile data (Commit 4)
+| Item | Result |
+|---|---|
+| Profile chunks | 61 files of 400 players; largest 312 KB raw / ~79 KB gzip |
+| All profiles | 17.3 MB raw, 4.5 MB gzip (loaded lazily, one chunk per newly opened profile; cached in memory) |
+| `teams.json` | ~100 KB raw (fetched with the first profile) |
+| Profile build (`scripts/build_profiles.py`) | ~9.7 s |
+The initial page load is unchanged (profile data is not fetched until “View full profile”). Chunk fetch time on a real network was not measured.

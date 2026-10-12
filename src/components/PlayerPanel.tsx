@@ -28,9 +28,9 @@ export function InfoPanel({ data }: { data: GraphData }) {
   )
 }
 
-interface PanelProps { data: GraphData; selected: number; onClose: () => void; onSelect: (index: number) => void }
+interface PanelProps { data: GraphData; selected: number; onClose: () => void; onSelect: (index: number) => void; onOpenProfile: () => void }
 
-export default function PlayerPanel({ data, selected, onClose, onSelect }: PanelProps) {
+export default function PlayerPanel({ data, selected, onClose, onSelect, onOpenProfile }: PanelProps) {
   const p = getPlayer(data, selected)
   const parentName = p.parent >= 0 ? data.players.name[p.parent] : null
   const trail = pathToRoot(data.players.parent, selected)
@@ -51,6 +51,7 @@ export default function PlayerPanel({ data, selected, onClose, onSelect }: Panel
         <dt>Connecting teammate</dt><dd>{parentName ?? 'None (root)'}</dd>
         {ts && (<><dt>Shared team-season</dt><dd>{ts}</dd></>)}
       </dl>
+      <button className="btn profile-btn" onClick={onOpenProfile}>View full profile</button>
       {trail.length > 1 && (
         <div className="trail">
           <h3>Path to {data.players.name[trail[trail.length - 1]]}</h3>
