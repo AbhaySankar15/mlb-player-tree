@@ -144,3 +144,10 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .reveal-title { font-weight:700; font-size:16px !important; color:var(--gold); }
 .chain { font-size:14px; }
 .modal .search { margin-top:4px; }
+
+.daily-card { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:14px 0 4px; padding:12px 14px; border:1px solid var(--gold); border-radius:10px; background:rgba(255,210,63,.06); }
+.daily-card .muted { margin-top:2px; }
+.mini-h { margin:18px 0 8px !important; font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
+.stats4 { grid-template-columns:repeat(4,1fr) !important; }
+.emoji-row { font-size:26px; letter-spacing:4px; margin:4px 0 8px !important; }
+.share-box { width:100%; margin-top:10px; min-height:90px; background:#070b17; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px; font:inherit; font-size:13px; }

@@ -33,7 +33,7 @@ Application code: MIT (see below). Data in `public/data/graph.json` is derived f
 Application code © 2026, MIT License.
 
 ## Using the graph
-“Play: Name the link” starts a 5-round guessing game (see `docs/GAME.md`).
+“Play: Name the link” starts a 5-round guessing game with a daily challenge, local streaks and shareable results (see `docs/GAME.md`).
 
 “Connect two players” (or “Path from here / Path to here” on a selected player) shows the shortest chain of teammates between any two players and draws it on the graph.
 

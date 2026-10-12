@@ -1,20 +1,35 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphData } from '../types/graph'
 import { formatTeamSeason } from '../lib/loadGraph'
 import { MAX_POINTS, ROUNDS, evaluateGuess, feedbackText, generateRound, mulberry32, scoreRound, sharedTeamSeasons, type Difficulty, type Round } from '../lib/game'
 import type { RostersState } from '../lib/useRosters'
 import { PlayerAvatar } from './Badges'
 import SearchBox from './SearchBox'
+import {
+  DAILY_DIFFICULTIES, challengeUrl, dailyFor, dateKey, dateSeed, emojiFor, loadGames, saveGame, shareText, summarize, type GameRecord,
+} from '../lib/dailyStats'
+
+export type GameStart = { mode: 'daily' } | { mode: 'practice'; seed: number; difficulty: Difficulty }
 
 interface Props {
   data: GraphData
   rosters: RostersState
+  /** Auto-start from a shared link (?daily=1 or ?seed=..&difficulty=..). */
+  initial?: GameStart | null
   onClose: () => void
   onShowOnGraph: (a: number, c: number) => void
 }
 
 interface Done { solved: boolean; points: number; guess: number | null; wrong: number; hints: number }
-type Stage = { kind: 'menu' } | { kind: 'play'; difficulty: Difficulty; round: number; results: Done[] } | { kind: 'end'; difficulty: Difficulty; results: Done[] }
+interface Play { mode: 'daily' | 'practice'; difficulties: Difficulty[]; seed: number; date: string }
+type Stage = { kind: 'menu' } | ({ kind: 'play'; round: number; results: Done[] } & Play) | ({ kind: 'end'; results: Done[] } & Play)
+
+const isDebug = () => import.meta.env.DEV || new URLSearchParams(location.search).has('debug')
+/** Today's local date; `?date=YYYY-MM-DD` overrides it in debug mode (for testing the daily and streaks). */
+function todayKey(): string {
+  const o = new URLSearchParams(location.search).get('date')
+  return isDebug() && o && /^\d{4}-\d{2}-\d{2}$/.test(o) ? o : dateKey()
+}
 
 const DIFF: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' }
 const DIFF_HELP: Record<Difficulty, string> = {
@@ -29,9 +44,23 @@ function seedFromUrl(): number {
   return Number.isFinite(n) ? n : (Date.now() & 0x7fffffff)
 }
 
-export default function GameModal({ data, rosters, onClose, onShowOnGraph }: Props) {
+export default function GameModal({ data, rosters, initial, onClose, onShowOnGraph }: Props) {
   const [stage, setStage] = useState<Stage>({ kind: 'menu' })
-  const [seed, setSeed] = useState(seedFromUrl)
+  const today = useMemo(todayKey, [])
+  const [games, setGames] = useState<GameRecord[]>(() => loadGames())
+  const started = useRef(false)
+
+  const startDaily = useCallback(() => setStage({ kind: 'play', mode: 'daily', difficulties: DAILY_DIFFICULTIES, seed: dateSeed(today), date: today, round: 0, results: [] }), [today])
+  const startPractice = useCallback((d: Difficulty, seed = seedFromUrl()) =>
+    setStage({ kind: 'play', mode: 'practice', difficulties: Array(ROUNDS).fill(d), seed, date: today, round: 0, results: [] }), [today])
+
+  // Shared links start the game immediately (once rosters are ready).
+  useEffect(() => {
+    if (started.current || !initial || rosters.status !== 'ready') return
+    started.current = true
+    if (initial.mode === 'daily') { if (!dailyFor(games, today)) startDaily() }
+    else startPractice(initial.difficulty, initial.seed)
+  }, [initial, rosters.status, games, today, startDaily, startPractice])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); onClose() } }
@@ -51,35 +80,63 @@ export default function GameModal({ data, rosters, onClose, onShowOnGraph }: Pro
         ) : rosters.status !== 'ready' ? (
           <div className="drawer-status" role="status"><div className="spinner small" />Loading rosters…</div>
         ) : stage.kind === 'menu' ? (
-          <Menu onStart={(d) => { setSeed(seedFromUrl()); setStage({ kind: 'play', difficulty: d, round: 0, results: [] }) }} />
+          <Menu games={games} today={today} onDaily={startDaily} onPractice={(d) => startPractice(d)} />
         ) : stage.kind === 'play' ? (
           <RoundView
-            key={`${stage.difficulty}-${stage.round}-${seed}`}
-            data={data} index={rosters.index} seed={seed} stage={stage}
+            key={`${stage.mode}-${stage.round}-${stage.seed}`}
+            data={data} index={rosters.index} seed={stage.seed} stage={stage}
             onFinish={(d) => {
               const results = [...stage.results, d]
-              setStage(stage.round + 1 >= ROUNDS ? { kind: 'end', difficulty: stage.difficulty, results } : { ...stage, round: stage.round + 1, results })
+              setStage(stage.round + 1 >= ROUNDS ? { ...stage, kind: 'end', results } : { ...stage, round: stage.round + 1, results })
             }}
             onShowOnGraph={onShowOnGraph}
           />
         ) : (
-          <End stage={stage} onAgain={() => setStage({ kind: 'menu' })} />
+          <End stage={stage} today={today} onSaved={setGames} onAgain={() => setStage({ kind: 'menu' })} />
         )}
       </div>
     </div>
   )
 }
 
-function Menu({ onStart }: { onStart: (d: Difficulty) => void }) {
+function Menu({ games, today, onDaily, onPractice }: { games: GameRecord[]; today: string; onDaily: () => void; onPractice: (d: Difficulty) => void }) {
+  const done = dailyFor(games, today)
+  const stats = summarize(games, today)
   return (
     <div className="modal-body">
       <p>You get two players who never shared a team-season, but <b>someone</b> played with both. Name any player who was a teammate of both.</p>
       <p className="muted">{ROUNDS} rounds · up to {MAX_POINTS} points each · wrong guesses and hints cost a point.</p>
+
+      <div className="daily-card">
+        <div>
+          <b>Daily challenge · {today}</b>
+          <div className="muted">{done ? `Played: ${done.score}/${done.max}  ${done.rounds.map(emojiFor).join('')}` : 'Same five rounds for everyone today, ramping easy → hard.'}</div>
+        </div>
+        <button className="btn play" onClick={onDaily} disabled={!!done}>{done ? 'Done · back tomorrow' : 'Play daily'}</button>
+      </div>
+
+      <h3 className="mini-h">Practice</h3>
       <div className="diff-btns">
         {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
-          <button key={d} className="btn diff" onClick={() => onStart(d)}><b>{DIFF[d]}</b><span>{DIFF_HELP[d]}</span></button>
+          <button key={d} className="btn diff" onClick={() => onPractice(d)}><b>{DIFF[d]}</b><span>{DIFF_HELP[d]}</span></button>
         ))}
       </div>
+
+      <h3 className="mini-h">Your stats <span className="muted">(saved on this device only)</span></h3>
+      <div className="statgrid stats4">
+        <div><span>DAILY STREAK</span><b>{stats.current}</b></div>
+        <div><span>BEST STREAK</span><b>{stats.best}</b></div>
+        <div><span>DAILIES</span><b>{stats.dailyPlayed}</b></div>
+        <div><span>GAMES</span><b>{stats.played}</b></div>
+      </div>
+      {stats.top.length > 0 && (
+        <ol className="guesses">
+          {stats.top.map((g, i) => (
+            <li key={i}>{g.score}/{g.max} · {g.mode === 'daily' ? `Daily ${g.date}` : `${g.difficulty} practice`} · {g.date}</li>
+          ))}
+        </ol>
+      )}
+      <p className="note">There is no online leaderboard: the app has no server, so scores and streaks stay in this browser. Share your result to compare with friends.</p>
     </div>
   )
 }
@@ -89,8 +146,8 @@ function RoundView({ data, index, seed, stage, onFinish, onShowOnGraph }: {
   stage: Extract<Stage, { kind: 'play' }>; onFinish: (d: Done) => void; onShowOnGraph: (a: number, c: number) => void
 }) {
   const round: Round = useMemo(
-    () => generateRound(index, data.players.degree, mulberry32(seed + stage.round * 7919), stage.difficulty),
-    [index, data, seed, stage.round, stage.difficulty],
+    () => generateRound(index, data.players.degree, mulberry32(seed + stage.round * 7919), stage.difficulties[stage.round]),
+    [index, data, seed, stage.round, stage.difficulties],
   )
   const [guesses, setGuesses] = useState<{ p: number; text: string; ok: boolean }[]>([])
   const [hints, setHints] = useState(0)
@@ -123,7 +180,7 @@ function RoundView({ data, index, seed, stage, onFinish, onShowOnGraph }: {
 
   return (
     <div className="modal-body">
-      <div className="round-head">Round {stage.round + 1} of {ROUNDS} · {DIFF[stage.difficulty]} · Score {stage.results.reduce((s, r) => s + r.points, 0)}</div>
+      <div className="round-head">Round {stage.round + 1} of {ROUNDS} · {stage.mode === 'daily' ? `Daily ${stage.date}` : DIFF[stage.difficulties[0]]} · {DIFF[stage.difficulties[stage.round]]} · Score {stage.results.reduce((s, r) => s + r.points, 0)}</div>
       <div className="duel">
         {[round.a, round.c].map((p) => (
           <div className="duel-card" key={p}>
@@ -178,17 +235,49 @@ function RoundView({ data, index, seed, stage, onFinish, onShowOnGraph }: {
   )
 }
 
-function End({ stage, onAgain }: { stage: Extract<Stage, { kind: 'end' }>; onAgain: () => void }) {
+function End({ stage, today, onSaved, onAgain }: { stage: Extract<Stage, { kind: 'end' }>; today: string; onSaved: (g: GameRecord[]) => void; onAgain: () => void }) {
   const total = stage.results.reduce((s, r) => s + r.points, 0)
+  const rec: GameRecord = useMemo(() => ({
+    date: stage.date, mode: stage.mode, difficulty: stage.mode === 'daily' ? 'daily' : stage.difficulties[0], score: total, max: ROUNDS * MAX_POINTS,
+    rounds: stage.results.map((r) => ({ solved: r.solved, points: r.points, wrong: r.wrong, hints: r.hints })), playedAt: Date.now(),
+  }), [stage, total])
+  const saved = useRef(false)
+  const [copied, setCopied] = useState<string | null>(null)
+  const link = challengeUrl(location.href, { mode: stage.mode, difficulty: stage.difficulties[0], seed: stage.seed })
+  const text = shareText(rec, link)
+  const stats = summarize(loadGames(), today)
+
+  useEffect(() => {
+    if (saved.current) return
+    saved.current = true
+    if (stage.mode === 'daily' && dailyFor(loadGames(), stage.date)) return // never record the daily twice
+    saveGame(rec)
+    onSaved(loadGames())
+  }, [rec, stage, onSaved])
+
+  const copy = async (what: string, value: string) => {
+    try { await navigator.clipboard.writeText(value); setCopied(what) } catch { setCopied('manual') }
+  }
+  const nativeShare = typeof navigator !== 'undefined' && 'share' in navigator
+
   return (
     <div className="modal-body" role="status">
-      <p className="reveal-title">Final score: {total} / {ROUNDS * MAX_POINTS} ({DIFF[stage.difficulty]})</p>
+      <p className="reveal-title">{stage.mode === 'daily' ? `Daily ${stage.date}` : `${DIFF[stage.difficulties[0]]} practice`}: {total} / {ROUNDS * MAX_POINTS}</p>
+      <p className="emoji-row" aria-label="Round results">{rec.rounds.map(emojiFor).join('')}</p>
       <ol className="guesses">
         {stage.results.map((r, i) => (
           <li key={i} className={r.solved ? 'ok' : 'bad'}>Round {i + 1}: {r.solved ? `solved, ${r.points} pt` : 'missed, 0 pt'} · {r.wrong} wrong · {r.hints} hint{r.hints === 1 ? '' : 's'}</li>
         ))}
       </ol>
-      <button className="btn" onClick={onAgain}>Play again</button>
+      <p className="muted">Daily streak: {stats.current} (best {stats.best})</p>
+      <div className="hint-row">
+        <button className="btn" onClick={() => copy('result', text)}>Copy result</button>
+        <button className="btn" onClick={() => copy('link', link)}>{stage.mode === 'daily' ? 'Copy daily link' : 'Copy challenge link'}</button>
+        {nativeShare && <button className="btn" onClick={() => navigator.share({ text }).catch(() => undefined)}>Share…</button>}
+        <button className="btn small" onClick={onAgain}>Menu</button>
+      </div>
+      {copied && copied !== 'manual' && <p className="hint">Copied {copied === 'result' ? 'your result' : 'the link'} to the clipboard.</p>}
+      {copied === 'manual' && <textarea className="share-box" readOnly value={text} onFocus={(e) => e.currentTarget.select()} aria-label="Copy this text" />}
     </div>
   )
 }

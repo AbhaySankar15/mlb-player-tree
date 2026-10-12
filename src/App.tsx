@@ -5,7 +5,7 @@ import ProfileDrawer from './components/ProfileDrawer'
 import SearchBox from './components/SearchBox'
 import GraphLegend from './components/GraphLegend'
 import PlayerPanel, { InfoPanel } from './components/PlayerPanel'
-import GameModal from './components/GameModal'
+import GameModal, { type GameStart } from './components/GameModal'
 import PathFinder from './components/PathFinder'
 import { findPath } from './lib/pathfinder'
 import { useRosters } from './lib/useRosters'
@@ -20,7 +20,13 @@ export default function App() {
   const [pfA, setPfA] = useState<number | null>(null)
   const [pfB, setPfB] = useState<number | null>(null)
   const [rosterRetry, setRosterRetry] = useState(0)
-  const [gameOpen, setGameOpen] = useState(false)
+  const initialGame = useMemo<GameStart | null>(() => {
+    const q = new URLSearchParams(location.search)
+    if (q.has('daily')) return { mode: 'daily' }
+    const seed = Number(q.get('seed')), d = q.get('difficulty')
+    return q.has('seed') && Number.isFinite(seed) && (d === 'easy' || d === 'medium' || d === 'hard') ? { mode: 'practice', seed, difficulty: d } : null
+  }, [])
+  const [gameOpen, setGameOpen] = useState(initialGame !== null)
   const [focusDepth, setFocusDepth] = useState<number | null>(null)
   const canvas = useRef<GraphCanvasHandle>(null)
 
@@ -72,7 +78,7 @@ export default function App() {
           )}
           {gameOpen && (
             <GameModal
-              data={data} rosters={rosters} onClose={() => setGameOpen(false)}
+              data={data} rosters={rosters} initial={initialGame} onClose={() => setGameOpen(false)}
               onShowOnGraph={(a, c) => { setPfA(a); setPfB(c); setGameOpen(false) }}
             />
           )}
