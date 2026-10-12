@@ -63,7 +63,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
 
     const sigma = new Sigma(graph, container.current, {
       renderEdgeLabels: false,
-      labelRenderedSizeThreshold: 9,
+      // Names stay hidden until a player is selected, searched, or part of a found path (those use forceLabel); hover still shows a tag.
+      labelRenderedSizeThreshold: Number.POSITIVE_INFINITY,
       labelDensity: 0.6,
       labelGridCellSize: 120,
       labelColor: { color: '#e8ecff' },
@@ -89,20 +90,19 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       maxCameraRatio: 3,
       nodeReducer: (node, attrs) => {
         const st = state.current
-        const isRoot = node === String(data.meta.rootIndex)
         if (st.pfNodes.size) {
           if (st.pfNodes.has(node)) return { ...attrs, size: 6, color: '#ffd23f', forceLabel: true, zIndex: 3 }
           return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
         }
         if (st.selected === null) {
-          if (st.focusDepth === null) return isRoot ? { ...attrs, forceLabel: true } : attrs
+          if (st.focusDepth === null) return attrs
           if (attrs.depth === st.focusDepth) return { ...attrs, size: Math.max(attrs.size * 1.6, 2.5), zIndex: 2 }
-          return isRoot ? { ...attrs, forceLabel: true } : { ...attrs, color: FOCUS_DIM_NODE, label: null, zIndex: 0 }
+          return { ...attrs, color: FOCUS_DIM_NODE, label: null, zIndex: 0 }
         }
         if (st.nodes.has(node)) {
           const isSel = node === String(st.selected)
           return { ...attrs, size: isSel ? 8 : Math.max(attrs.size * 1.6, 3), color: isSel ? '#ffffff' : attrs.color,
-            forceLabel: true, zIndex: isSel ? 3 : 2, highlighted: isSel }
+            forceLabel: isSel, zIndex: isSel ? 3 : 2, highlighted: isSel }
         }
         return { ...attrs, color: DIM_NODE, label: null, zIndex: 0 }
       },
