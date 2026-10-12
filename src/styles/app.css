@@ -117,3 +117,30 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .pf-btns { display:flex; gap:8px; margin-top:8px; }
 .pf-btns .btn { flex:1; }
 .pathfinder h2 { font-size:13px; }
+
+.btn.play { border-color:var(--gold); color:var(--gold); }
+.modal-backdrop { position:absolute; inset:0; z-index:8; background:rgba(3,6,14,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:16px; }
+.modal { width:min(560px,100%); max-height:100%; overflow:auto; background:#0a0f20; border:1px solid var(--line); border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.6); animation:slidein .2s ease-out; }
+.modal-head { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); }
+.modal-head h2 { margin:0; font-size:18px; color:var(--gold); }
+.modal-body { padding:16px 18px 20px; }
+.modal-body p { margin:0 0 10px; line-height:1.45; font-size:14px; }
+.diff-btns { display:grid; gap:8px; margin-top:12px; }
+.btn.diff { display:flex; justify-content:space-between; align-items:center; text-align:left; padding:10px 14px; }
+.btn.diff span { font-size:12px; color:var(--muted); }
+.round-head { font-size:12px; color:var(--muted); margin-bottom:12px; letter-spacing:.04em; }
+.duel { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.duel-card { display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 8px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.03); text-align:center; }
+.duel-name { font-size:16px; font-weight:700; }
+.duel-q { text-align:center; margin:14px 0 10px !important; }
+.game-msg { color:#ff9f43; font-size:13px !important; margin:8px 0 0 !important; }
+.hint-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.hint { background:rgba(255,210,63,.08); border:1px solid rgba(255,210,63,.3); border-radius:6px; padding:8px 10px; margin-top:8px !important; font-size:13px !important; }
+.guesses { list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:5px; font-size:13px; }
+.guesses li { padding:6px 9px; border-radius:6px; border:1px solid var(--line); }
+.guesses li.ok { border-color:#1dd1a1; background:rgba(29,209,161,.1); }
+.guesses li.bad { border-color:#5a3340; background:rgba(255,107,107,.07); }
+.reveal { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
+.reveal-title { font-weight:700; font-size:16px !important; color:var(--gold); }
+.chain { font-size:14px; }
+.modal .search { margin-top:4px; }

@@ -5,6 +5,7 @@ import ProfileDrawer from './components/ProfileDrawer'
 import SearchBox from './components/SearchBox'
 import GraphLegend from './components/GraphLegend'
 import PlayerPanel, { InfoPanel } from './components/PlayerPanel'
+import GameModal from './components/GameModal'
 import PathFinder from './components/PathFinder'
 import { findPath } from './lib/pathfinder'
 import { useRosters } from './lib/useRosters'
@@ -19,6 +20,7 @@ export default function App() {
   const [pfA, setPfA] = useState<number | null>(null)
   const [pfB, setPfB] = useState<number | null>(null)
   const [rosterRetry, setRosterRetry] = useState(0)
+  const [gameOpen, setGameOpen] = useState(false)
   const [focusDepth, setFocusDepth] = useState<number | null>(null)
   const canvas = useRef<GraphCanvasHandle>(null)
 
@@ -29,7 +31,7 @@ export default function App() {
   }, [])
   useEffect(load, [load])
 
-  const rosters = useRosters(pfA !== null || pfB !== null, data?.count ?? 0, rosterRetry)
+  const rosters = useRosters(pfA !== null || pfB !== null || gameOpen, data?.count ?? 0, rosterRetry)
   const found = useMemo(
     () => (rosters.status === 'ready' && pfA !== null && pfB !== null ? findPath(rosters.index, pfA, pfB) : undefined),
     [rosters, pfA, pfB],
@@ -56,6 +58,7 @@ export default function App() {
             <div className="toolbar">
               <button className="btn" onClick={() => canvas.current?.fit()}>Fit graph</button>
               <button className="btn" onClick={() => canvas.current?.resetToRoot()}>Reset to center (root)</button>
+              <button className="btn play" onClick={() => setGameOpen(true)}>Play: Name the link</button>
             </div>
             {selected !== null && <PlayerPanel data={data} selected={selected} onClose={() => setSelected(null)} onSelect={setSelected} onOpenProfile={() => setProfileOpen(true)} onPathFrom={() => setPfA(selected)} onPathTo={() => setPfB(selected)} />}
             <PathFinder
@@ -66,6 +69,12 @@ export default function App() {
           </aside>
           {selected !== null && profileOpen && (
             <ProfileDrawer data={data} selected={selected} onClose={() => setProfileOpen(false)} />
+          )}
+          {gameOpen && (
+            <GameModal
+              data={data} rosters={rosters} onClose={() => setGameOpen(false)}
+              onShowOnGraph={(a, c) => { setPfA(a); setPfB(c); setGameOpen(false) }}
+            />
           )}
           <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} />
         </>
