@@ -22,8 +22,9 @@ async function board(url: string): Promise<ApiResult<{ entries: BoardEntry[] }>>
   if (!r.ok) return r
   return Array.isArray(r.data.entries) ? { ok: true, data: { entries: r.data.entries } } : { ok: false, status: 503, message: 'Leaderboard unavailable.' }
 }
-export const fetchDaily = (date: string) => board(`/api/leaderboard?date=${encodeURIComponent(date)}`)
-export const fetchWeek = (end: string) => board(`/api/leaderboard?week=${encodeURIComponent(end)}`)
+/** `fresh` adds a throwaway query value so a just-posted score is not hidden by the CDN's 10 s cache of the board. */
+export const fetchDaily = (date: string, fresh = false) => board(`/api/leaderboard?date=${encodeURIComponent(date)}${fresh ? `&_=${Date.now()}` : ''}`)
+export const fetchWeek = (end: string, fresh = false) => board(`/api/leaderboard?week=${encodeURIComponent(end)}${fresh ? `&_=${Date.now()}` : ''}`)
 export const submitScore = (date: string, name: string, rounds: SubmitRound[]) =>
   call<{ rank: number; score: number; entries: BoardEntry[] }>('/api/leaderboard', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date, name, rounds }),

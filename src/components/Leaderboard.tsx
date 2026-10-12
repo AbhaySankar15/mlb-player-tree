@@ -11,11 +11,11 @@ export default function Leaderboard({ date, me, refreshKey = 0 }: { date: string
 
   const load = useCallback(async () => {
     setState({ kind: 'loading' })
-    const r = tab === 'day' ? await fetchDaily(date) : await fetchWeek(date)
+    const r = tab === 'day' ? await fetchDaily(date, refreshKey > 0) : await fetchWeek(date, refreshKey > 0)
     setState(r.ok ? { kind: 'ready', entries: r.data.entries } : { kind: 'error', message: r.message, unconfigured: r.status === 503 || r.status === 404 })
-  }, [tab, date])
+  }, [tab, date, refreshKey])
 
-  useEffect(() => { void load() }, [load, refreshKey])
+  useEffect(() => { void load() }, [load])
   const mine = me ? nameKey(me) : ''
 
   return (
