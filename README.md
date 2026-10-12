@@ -30,3 +30,6 @@ npx tsc --noEmit && npx vitest run && npm run build
 Application code: MIT (see below). Data in `public/data/graph.json` is derived from the Lahman database and is licensed CC BY-SA 3.0; Negro Leagues data is licensed from Seamheads.com. Credit: *Lahman Baseball Database, SABR*.
 
 Application code © 2026, MIT License.
+
+## Using the graph
+Scroll/pinch to zoom, drag to pan, click a player to see their path to the center (click a name in the path trail to jump along it), Esc to deselect. Hover a legend row to isolate that layer. Edges beyond the third layer appear as you zoom in, to keep the full view readable.

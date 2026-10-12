@@ -1,5 +1,6 @@
 import type { GraphData } from '../types/graph'
 import { formatTeamSeason, getPlayer } from '../lib/loadGraph'
+import { pathToRoot } from '../lib/pathToRoot'
 
 const fmt = (n: number) => n.toLocaleString('en-US')
 
@@ -27,9 +28,12 @@ export function InfoPanel({ data }: { data: GraphData }) {
   )
 }
 
-export default function PlayerPanel({ data, selected, onClose }: { data: GraphData; selected: number; onClose: () => void }) {
+interface PanelProps { data: GraphData; selected: number; onClose: () => void; onSelect: (index: number) => void }
+
+export default function PlayerPanel({ data, selected, onClose, onSelect }: PanelProps) {
   const p = getPlayer(data, selected)
   const parentName = p.parent >= 0 ? data.players.name[p.parent] : null
+  const trail = pathToRoot(data.players.parent, selected)
   const ts = p.evidence >= 0 ? formatTeamSeason(data.teamSeasons[p.evidence]) : ''
   return (
     <section className="panel selected">
@@ -47,6 +51,21 @@ export default function PlayerPanel({ data, selected, onClose }: { data: GraphDa
         <dt>Connecting teammate</dt><dd>{parentName ?? 'None (root)'}</dd>
         {ts && (<><dt>Shared team-season</dt><dd>{ts}</dd></>)}
       </dl>
+      {trail.length > 1 && (
+        <div className="trail">
+          <h3>Path to {data.players.name[trail[trail.length - 1]]}</h3>
+          <ol>
+            {trail.map((idx, k) => (
+              <li key={idx} className={k === 0 ? 'current' : ''}>
+                <button className="trail-btn" onClick={() => onSelect(idx)} disabled={k === 0}>{data.players.name[idx]}</button>
+                {k < trail.length - 1 && (
+                  <span className="trail-via">via {formatTeamSeason(data.teamSeasons[data.players.evidence[idx]])}</span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </section>
   )
 }

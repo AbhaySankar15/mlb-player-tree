@@ -10,6 +10,7 @@ export default function App() {
   const [data, setData] = useState<GraphData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<number | null>(null)
+  const [focusDepth, setFocusDepth] = useState<number | null>(null)
   const canvas = useRef<GraphCanvasHandle>(null)
 
   const load = useCallback(() => {
@@ -21,7 +22,7 @@ export default function App() {
 
   return (
     <div className="app">
-      {data && <GraphCanvas ref={canvas} data={data} selected={selected} onSelect={setSelected} />}
+      {data && <GraphCanvas ref={canvas} data={data} selected={selected} focusDepth={focusDepth} onSelect={setSelected} />}
       <Header />
       {!data && !error && (
         <div className="overlay" role="status"><div className="spinner" />Loading players…</div>
@@ -39,12 +40,11 @@ export default function App() {
             <div className="toolbar">
               <button className="btn" onClick={() => canvas.current?.fit()}>Fit graph</button>
               <button className="btn" onClick={() => canvas.current?.resetToRoot()}>Reset to center (root)</button>
-              {selected !== null && <button className="btn" onClick={() => setSelected(null)}>Deselect</button>}
             </div>
-            {selected !== null && <PlayerPanel data={data} selected={selected} onClose={() => setSelected(null)} />}
+            {selected !== null && <PlayerPanel data={data} selected={selected} onClose={() => setSelected(null)} onSelect={setSelected} />}
             <InfoPanel data={data} />
           </aside>
-          <GraphLegend maxDepth={data.meta.maximumSeparation} />
+          <GraphLegend maxDepth={data.meta.maximumSeparation} focusDepth={focusDepth} onFocus={setFocusDepth} />
         </>
       )}
     </div>

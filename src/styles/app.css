@@ -11,13 +11,16 @@ html, body, #root { margin:0; height:100%; background:var(--bg); color:var(--tex
 .sidebar { position:absolute; top:78px; left:16px; width:320px; max-height:calc(100vh - 94px);
   overflow:auto; display:flex; flex-direction:column; gap:10px; z-index:2; }
 .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
-.btn { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px;
+.btn { transition:border-color .15s, background .15s, transform .1s; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px;
   padding:7px 12px; font-size:13px; cursor:pointer; }
-.btn:hover { border-color:var(--gold); }
+.btn:hover { border-color:var(--gold); background:rgba(255,210,63,.08); }
+.btn:active { transform:translateY(1px); }
+.btn:focus-visible, .legend-row:focus-visible, .trail-btn:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 .btn.small { padding:3px 8px; font-size:12px; }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
   backdrop-filter: blur(6px); }
-.panel.selected { border-color:var(--gold); }
+.panel.selected { border-color:var(--gold); animation:slidein .25s ease-out; }
+@keyframes slidein { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 .panel h2 { margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.08em; }
 .panel.selected h2 { text-transform:none; font-size:17px; color:var(--gold); letter-spacing:0; }
 .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
@@ -25,10 +28,12 @@ dl { margin:0; display:grid; grid-template-columns:1fr auto; gap:4px 12px; font-
 dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .note { font-size:11.5px; color:var(--muted); line-height:1.45; margin:10px 0 0; }
 .attribution { font-size:10.5px; }
-.legend { position:absolute; right:16px; bottom:16px; background:var(--panel); border:1px solid var(--line);
+.legend { max-width:230px; position:absolute; right:16px; bottom:16px; background:var(--panel); border:1px solid var(--line);
   border-radius:8px; padding:10px 12px; font-size:12px; z-index:2; }
 .legend-title { color:var(--muted); margin-bottom:6px; }
-.legend-row { display:flex; align-items:center; gap:8px; margin:3px 0; }
+.legend-row { display:flex; align-items:center; gap:8px; margin:1px -6px; padding:2px 6px; border-radius:5px; cursor:default; transition:background .12s; }
+.legend-row:hover, .legend-row.active { background:rgba(255,255,255,.09); }
+.legend-hint { margin-top:6px; font-size:10.5px; color:var(--muted); }
 .swatch { width:12px; height:12px; border-radius:50%; display:inline-block; }
 .overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:10px; z-index:3; }
@@ -36,6 +41,17 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
 .spinner { width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--gold);
   border-radius:50%; animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.trail { margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+.trail h3 { margin:0 0 6px; font-size:12px; color:var(--muted); font-weight:600; }
+.trail ol { list-style:none; margin:0; padding:0 0 0 12px; border-left:2px solid var(--line); display:flex; flex-direction:column; gap:6px; }
+.trail li { display:flex; flex-direction:column; position:relative; }
+.trail li::before { content:''; position:absolute; left:-17px; top:7px; width:8px; height:8px; border-radius:50%; background:var(--line); }
+.trail li.current::before { background:var(--gold); }
+.trail-btn { background:none; border:0; padding:0; text-align:left; color:var(--text); font-size:13px; font-weight:600; cursor:pointer; }
+.trail-btn:hover:not(:disabled) { color:var(--gold); text-decoration:underline; }
+.trail-btn:disabled { color:var(--gold); cursor:default; }
+.trail-via { font-size:11px; color:var(--muted); }
+@media (prefers-reduced-motion: reduce) { .panel.selected { animation:none; } .btn, .legend-row { transition:none; } }
 @media (max-width: 640px) {
   .sidebar { top:auto; bottom:0; left:0; right:0; width:100%; max-height:42vh; padding:8px; }
   .legend { right:8px; top:70px; bottom:auto; padding:6px 8px; }
