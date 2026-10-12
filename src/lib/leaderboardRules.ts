@@ -1,5 +1,5 @@
 /** Rules shared by the browser and the /api/leaderboard function: nickname checks, submission validation and score encoding. */
-import { MAX_POINTS, ROUNDS, scoreRound } from './game'
+import { MAX_POINTS, ROUNDS, scoreRound } from './scoring.js'
 
 export const NAME_MIN = 3
 export const NAME_MAX = 16

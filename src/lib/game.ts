@@ -2,8 +2,8 @@
 import type { PathIndex } from './pathfinder'
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
-export const ROUNDS = 5
-export const MAX_POINTS = 3
+import { MAX_POINTS, ROUNDS, scoreRound } from './scoring'
+export { MAX_POINTS, ROUNDS, scoreRound }
 
 export interface Round {
   a: number
@@ -87,11 +87,6 @@ export function evaluateGuess(idx: PathIndex, round: Round, guess: number): Gues
   if (round.connectors.includes(guess)) return { kind: 'correct' }
   const na = teammates(idx, round.a), nc = teammates(idx, round.c)
   return { kind: 'wrong', withA: na.has(guess), withC: nc.has(guess) }
-}
-
-/** 3 points for a clean solve, minus one per wrong guess or hint used; 0 if unsolved. */
-export function scoreRound(solved: boolean, wrongGuesses: number, hintsUsed: number): number {
-  return solved ? Math.max(0, MAX_POINTS - wrongGuesses - hintsUsed) : 0
 }
 
 export function feedbackText(r: Extract<GuessResult, { kind: 'wrong' }>, nameA: string, nameC: string): string {

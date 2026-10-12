@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "verify": "tsc --noEmit && vitest run && .venv/bin/python -m pytest -q && vite build",
+    "verify": "tsc --noEmit && tsc -p tsconfig.api.json && vitest run && .venv/bin/python -m pytest -q && vite build",
     "data": ".venv/bin/python scripts/download_data.py && .venv/bin/python scripts/export_graph.py && .venv/bin/python scripts/build_profiles.py && .venv/bin/python scripts/validate_data.py"
   },
   "dependencies": {
