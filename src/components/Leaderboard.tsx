@@ -12,7 +12,7 @@ export default function Leaderboard({ date, me, refreshKey = 0 }: { date: string
   const load = useCallback(async () => {
     setState({ kind: 'loading' })
     const r = tab === 'day' ? await fetchDaily(date) : await fetchWeek(date)
-    setState(r.ok ? { kind: 'ready', entries: r.data.entries } : { kind: 'error', message: r.message, unconfigured: r.status === 503 })
+    setState(r.ok ? { kind: 'ready', entries: r.data.entries } : { kind: 'error', message: r.message, unconfigured: r.status === 503 || r.status === 404 })
   }, [tab, date])
 
   useEffect(() => { void load() }, [load, refreshKey])

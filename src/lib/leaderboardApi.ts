@@ -7,7 +7,9 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; 
 async function call<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
     const res = await fetch(url, init)
-    const json = await res.json().catch(() => ({}))
+    // Dev servers and misconfigured hosts can answer 200 with index.html; treat anything that is not JSON as unavailable.
+    const json = await res.json().catch(() => null)
+    if (json === null || typeof json !== 'object') return { ok: false, status: res.ok ? 503 : res.status, message: 'Leaderboard unavailable.' }
     if (!res.ok) return { ok: false, status: res.status, message: (json as { error?: string }).error ?? 'Leaderboard unavailable.' }
     return { ok: true, data: json as T }
   } catch {
@@ -15,8 +17,13 @@ async function call<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
   }
 }
 
-export const fetchDaily = (date: string) => call<{ date: string; entries: BoardEntry[] }>(`/api/leaderboard?date=${encodeURIComponent(date)}`)
-export const fetchWeek = (end: string) => call<{ end: string; entries: BoardEntry[] }>(`/api/leaderboard?week=${encodeURIComponent(end)}`)
+async function board(url: string): Promise<ApiResult<{ entries: BoardEntry[] }>> {
+  const r = await call<{ entries?: BoardEntry[] }>(url)
+  if (!r.ok) return r
+  return Array.isArray(r.data.entries) ? { ok: true, data: { entries: r.data.entries } } : { ok: false, status: 503, message: 'Leaderboard unavailable.' }
+}
+export const fetchDaily = (date: string) => board(`/api/leaderboard?date=${encodeURIComponent(date)}`)
+export const fetchWeek = (end: string) => board(`/api/leaderboard?week=${encodeURIComponent(end)}`)
 export const submitScore = (date: string, name: string, rounds: SubmitRound[]) =>
   call<{ rank: number; score: number; entries: BoardEntry[] }>('/api/leaderboard', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date, name, rounds }),
