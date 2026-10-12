@@ -32,4 +32,4 @@ Application code: MIT (see below). Data in `public/data/graph.json` is derived f
 Application code © 2026, MIT License.
 
 ## Using the graph
-Scroll/pinch to zoom, drag to pan, click a player to see their path to the center (click a name in the path trail to jump along it), Esc to deselect. Hover a legend row to isolate that layer. Edges beyond the third layer appear as you zoom in, to keep the full view readable.
+Press `/` (or click the box) to search any player by name or playerID; accents and word order do not matter, and same-name players are listed separately with their years and IDs. Scroll/pinch to zoom, drag to pan, click a player to see their path to the center (click a name in the path trail to jump along it), Esc to deselect. Hover a legend row to isolate that layer. Edges beyond the third layer appear as you zoom in, to keep the full view readable.

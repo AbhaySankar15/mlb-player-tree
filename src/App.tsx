@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import GraphCanvas, { type GraphCanvasHandle } from './components/GraphCanvas'
 import Header from './components/Header'
+import SearchBox from './components/SearchBox'
 import GraphLegend from './components/GraphLegend'
 import PlayerPanel, { InfoPanel } from './components/PlayerPanel'
 import { loadGraph } from './lib/loadGraph'
@@ -37,6 +38,7 @@ export default function App() {
       {data && (
         <>
           <aside className="sidebar">
+            <SearchBox data={data} onSelect={setSelected} />
             <div className="toolbar">
               <button className="btn" onClick={() => canvas.current?.fit()}>Fit graph</button>
               <button className="btn" onClick={() => canvas.current?.resetToRoot()}>Reset to center (root)</button>
