@@ -34,7 +34,10 @@ def test_same_playerid_different_players_not_merged():
     assert rows["p1"] == [[0, 10]] and rows["p2"] == [[0, 7]]
 
 
-real = pytest.mark.skipif(not os.path.exists("public/data/profiles/p0.json"), reason="run scripts/build_profiles.py first")
+real = pytest.mark.skipif(
+    not (os.path.exists("public/data/profiles/p0.json") and os.path.exists("data/raw/Pitching.csv")),
+    reason="needs generated profiles and data/raw (run scripts/download_data.py and build_profiles.py)",
+)
 
 
 @real

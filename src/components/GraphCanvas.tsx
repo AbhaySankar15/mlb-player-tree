@@ -5,6 +5,9 @@ import type { GraphData } from '../types/graph'
 import { pathToRoot } from '../lib/pathToRoot'
 import { DIM_NODE, EDGE_DIM, FOCUS_DIM_NODE, PATH_COLOR, ROOT_COLOR, depthColor, edgeColor, edgeColorFocused, nodeSize } from '../lib/colors'
 
+/** Camera animation length; 0 when the user prefers reduced motion. */
+const dur = (ms: number) => (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : ms)
+
 export interface GraphCanvasHandle {
   fit: () => void
   resetToRoot: () => void
@@ -33,12 +36,12 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
   onSelectRef.current = onSelect
 
   useImperativeHandle(ref, () => ({
-    fit: () => sigmaRef.current?.getCamera().animatedReset({ duration: 900, easing: 'cubicInOut' }),
+    fit: () => sigmaRef.current?.getCamera().animatedReset({ duration: dur(900), easing: 'cubicInOut' }),
     resetToRoot: () => {
       const s = sigmaRef.current
       if (!s) return
       const d = s.getNodeDisplayData(String(data.meta.rootIndex))
-      if (d) s.getCamera().animate({ x: d.x, y: d.y, ratio: 0.12, angle: 0 }, { duration: 900, easing: 'cubicInOut' })
+      if (d) s.getCamera().animate({ x: d.x, y: d.y, ratio: 0.12, angle: 0 }, { duration: dur(900), easing: 'cubicInOut' })
     },
   }), [data])
 
@@ -131,7 +134,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
       if (out !== state.current.zoomedOut) { state.current.zoomedOut = out; sigma.refresh() }
     })
     cam.setState({ ...cam.getState(), ratio: 1.8 })
-    cam.animate({ ratio: 1 }, { duration: 1400, easing: 'cubicOut' })
+    cam.animate({ ratio: 1 }, { duration: dur(1400), easing: 'cubicOut' })
 
     if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
       ;(window as unknown as Record<string, unknown>).__mlbTree = { sigma, graph }
@@ -160,7 +163,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
     if (sigma && selected !== null) {
       const d = sigma.getNodeDisplayData(String(selected))
       const cam = sigma.getCamera()
-      if (d) cam.animate({ x: d.x, y: d.y, ratio: Math.min(cam.getState().ratio, 0.2) }, { duration: 800, easing: 'cubicInOut' })
+      if (d) cam.animate({ x: d.x, y: d.y, ratio: Math.min(cam.getState().ratio, 0.2) }, { duration: dur(800), easing: 'cubicInOut' })
     }
   }, [selected, data])
 
@@ -186,7 +189,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
         const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
         sigma.getCamera().animate(
           { x: (Math.max(...xs) + Math.min(...xs)) / 2, y: (Math.max(...ys) + Math.min(...ys)) / 2, ratio: Math.min(1, Math.max(0.03, span * 1.5 + 0.02)) },
-          { duration: 900, easing: 'cubicInOut' },
+          { duration: dur(900), easing: 'cubicInOut' },
         )
       }
     }
@@ -205,7 +208,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas({ 
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  return <div ref={container} className="graph-canvas" />
+  return <main ref={container} className="graph-canvas" aria-label="Network graph of every major leaguer. Use the search and path finder for keyboard access." />
 })
 
 export default GraphCanvas

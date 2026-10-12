@@ -8,7 +8,7 @@ interface Props {
 
 export default function GraphLegend({ maxDepth, focusDepth, onFocus }: Props) {
   return (
-    <div className="legend" aria-label="Degrees of separation legend">
+    <aside className="legend" aria-label="Degrees of separation legend">
       <div className="legend-title">Degrees of separation</div>
       {DEPTH_COLORS.slice(0, Math.min(maxDepth, 10) + 1).map((c, d) => (
         <div
@@ -25,6 +25,6 @@ export default function GraphLegend({ maxDepth, focusDepth, onFocus }: Props) {
         </div>
       ))}
       <div className="legend-hint">Hover a row to isolate a layer. Zoom in to reveal outer-layer links.</div>
-    </div>
+    </aside>
   )
 }

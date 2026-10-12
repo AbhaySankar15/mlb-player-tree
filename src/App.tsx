@@ -65,12 +65,12 @@ export default function App() {
       {data && (
         <>
           {selected !== null && !sheetOpen && (
-            <div className="selected-chip" role="status">
+            <aside className="selected-chip" aria-label="Selected player">
               <PlayerAvatar id={data.players.id[selected]} name={data.players.name[selected]} size={30} ringColor={depthColor(data.players.depth[selected])} />
               <span className="chip-name">{data.players.name[selected]}<small> · {data.players.depth[selected]} away</small></span>
               <button className="btn small" onClick={() => setSheetOpen(true)}>Details</button>
               <button className="btn small" onClick={() => setSelected(null)} aria-label="Deselect">✕</button>
-            </div>
+            </aside>
           )}
           <aside className={`sidebar${sheetOpen ? ' open' : ''}`}>
             <button className="sheet-handle" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} aria-label={sheetOpen ? 'Collapse menu' : 'Expand menu'}>

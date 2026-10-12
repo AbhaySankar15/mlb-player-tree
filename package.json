@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify": "tsc --noEmit && vitest run && .venv/bin/python -m pytest -q && vite build",
+    "data": ".venv/bin/python scripts/download_data.py && .venv/bin/python scripts/export_graph.py && .venv/bin/python scripts/build_profiles.py && .venv/bin/python scripts/validate_data.py"
   },
   "dependencies": {
     "graphology": "0.26.0",
@@ -23,5 +25,8 @@
     "typescript": "5.6.3",
     "vite": "5.4.11",
     "vitest": "2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

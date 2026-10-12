@@ -1,44 +1,48 @@
 # MLB Player Tree
 
-Interactive radial network of every major leaguer in the SABR Lahman Baseball Database 2025 (1871–2025, including Negro Leagues). Two players are connected when they appeared for the same team in the same season. The center is the player with the most unique career teammates (computed, not hardcoded); rings show degrees of separation.
+Every major leaguer, connected through baseball history. An interactive map of **24,011 players (1871–2025, including the Negro Leagues)** from the SABR Lahman Baseball Database. Two players are connected when they appeared for the same team in the same season. The center is whoever has the most unique career teammates (computed from the data, currently Rich Hill with 944), and rings show degrees of separation. Static site, no backend.
+
+## Features
+- **Radial tree** of all players with WebGL rendering (Sigma.js); zoom, pan, hover, select, path-to-center highlight, layer isolation from the legend.
+- **Search** any player by name or playerID (accent- and order-insensitive).
+- **Profiles:** bio, teams (with full historical names), career batting/pitching totals, season-by-season lines.
+- **Path finder:** the shortest teammate chain between any two players, drawn on the graph.
+- **Game:** "Name the link", with a daily challenge, streaks, and shareable results.
+- **Mobile:** bottom-sheet layout and touch-sized controls.
+- Original generated avatars and badges (no headshots or logos; see `docs/IMAGES.md`).
 
 ## Run
 ```bash
 npm install
-npm run dev            # or: npm run build && npm run preview
+npm run dev                    # development
+npm run build && npm run preview   # production build
 ```
-`public/data/graph.json` is committed, so no data step is needed to view the site.
+`public/data/` is committed, so no data step is needed to run the site.
 
 ## Rebuild the data
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python scripts/download_data.py      # Lahman CSVs -> data/raw/ (git-ignored)
-.venv/bin/python scripts/export_graph.py       # -> public/data/graph.json
-.venv/bin/python scripts/build_profiles.py     # -> public/data/profiles/*.json, teams.json (run after export_graph)
-.venv/bin/python scripts/validate_data.py      # cross-check + docs/VALIDATION_REPORT.md
+npm run data    # download Lahman, export graph/rosters/profiles, validate (docs/VALIDATION_REPORT.md)
 ```
+Individual steps: `scripts/download_data.py`, `export_graph.py` (graph + rosters), `build_profiles.py` (profiles; run after export), `validate_data.py`, `make_path_fixture.py` (independent networkx distances used by a frontend test).
 
 ## Test
 ```bash
-.venv/bin/python -m pytest      # graph algorithms (synthetic) + real-data invariants
-npx tsc --noEmit && npx vitest run && npm run build
+npm run verify    # tsc, vitest, pytest, production build
 ```
-
-## Docs
-`docs/DATA_SOURCES.md` (sources, licenses), `GRAPH_ALGORITHM.md`, `GRAPH_FORMAT.md`, `DATA_QUALITY.md`, `PERFORMANCE.md`, `VALIDATION_REPORT.md`.
-
-## Licenses
-Application code: MIT (see below). Data in `public/data/graph.json` is derived from the Lahman database and is licensed CC BY-SA 3.0; Negro Leagues data is licensed from Seamheads.com. Credit: *Lahman Baseball Database, SABR*.
-
-Application code © 2026, MIT License.
+Python tests cover the graph algorithms on synthetic data and real-data invariants; the validation script cross-checks everything against an explicit networkx teammate graph.
 
 ## Using the graph
-On phones the controls live in a bottom sheet (tap the handle to expand); tapping a player shows a compact chip with a Details button.
+Press `/` to search; select a player for the path trail, **View full profile**, and **Path from/to here**. “Connect two players” finds the shortest chain. “Play: Name the link” starts the game. Hover a legend row to isolate a layer; edges beyond the third layer appear as you zoom in. On phones, tap the sheet handle to expand the menu; tapping a player shows a chip with a Details button.
 
-“Play: Name the link” starts a 5-round guessing game with a daily challenge, local streaks and shareable results (see `docs/GAME.md`).
+## Documentation
+`docs/`: `DATA_SOURCES.md` (sources, licenses), `DATA_QUALITY.md` (limitations), `GRAPH_ALGORITHM.md`, `GRAPH_FORMAT.md`, `GAME.md`, `IMAGES.md`, `PERFORMANCE.md` (measurements and caveats), `DEPLOYMENT.md`, `VALIDATION_REPORT.md`.
 
-“Connect two players” (or “Path from here / Path to here” on a selected player) shows the shortest chain of teammates between any two players and draws it on the graph.
+## Known limitations
+- Data ends with the 2025 season (2026 not imported).
+- Lahman Appearances omits 8 player/team/season rows that Batting has, so a few teammate links are missing (`docs/DATA_QUALITY.md`).
+- Negro Leagues records are incomplete; a missing membership means "not established by the source".
+- No global leaderboard (no server); stats and streaks live in the browser. Real-GPU frame rates were not measured.
 
-Select a player and press “View full profile” for bio, teams, career batting/pitching totals and a season-by-season table (Esc closes it).
-
-Press `/` (or click the box) to search any player by name or playerID; accents and word order do not matter, and same-name players are listed separately with their years and IDs. Scroll/pinch to zoom, drag to pan, click a player to see their path to the center (click a name in the path trail to jump along it), Esc to deselect. Hover a legend row to isolate that layer. Edges beyond the third layer appear as you zoom in, to keep the full view readable.
+## Licenses
+Application code: MIT (`LICENSE`). Data in `public/data/` is derived from the SABR Lahman Baseball Database under CC BY-SA 3.0; Negro Leagues data is licensed from Seamheads.com. Credit: *Lahman Baseball Database, SABR*.

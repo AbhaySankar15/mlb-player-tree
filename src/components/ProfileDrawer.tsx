@@ -169,7 +169,7 @@ function ProfileBody({ data, selected, profile, teams }: { data: GraphData; sele
       {!hasBat && !hasPit && <p className="muted">No batting or pitching lines are recorded for this player in the source data.</p>}
 
       <h3>Season by season</h3>
-      <div className="tbl-wrap">
+      <div className="tbl-wrap" tabIndex={0} role="region" aria-label="Season by season table">
         <table className="tbl seasons">
           <thead><tr><th>Year</th><th>Team</th><th className="n">G</th>{hasBat && <th>Batting</th>}{hasPit && <th>Pitching</th>}<th>Team W–L</th></tr></thead>
           <tbody>
