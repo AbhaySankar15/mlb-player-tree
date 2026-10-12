@@ -1,5 +1,7 @@
 import type { GraphData } from '../types/graph'
 import { formatTeamSeason, getPlayer } from '../lib/loadGraph'
+import { PlayerAvatar } from './Badges'
+import { depthColor } from '../lib/colors'
 import { pathToRoot } from '../lib/pathToRoot'
 
 const fmt = (n: number) => n.toLocaleString('en-US')
@@ -38,7 +40,10 @@ export default function PlayerPanel({ data, selected, onClose, onSelect, onOpenP
   return (
     <section className="panel selected">
       <div className="panel-head">
-        <h2>{p.name}</h2>
+        <div className="panel-title">
+          <PlayerAvatar id={p.id} name={p.name} size={36} ringColor={depthColor(p.depth)} />
+          <h2>{p.name}</h2>
+        </div>
         <button className="btn small" onClick={onClose} aria-label="Deselect">Deselect</button>
       </div>
       <dl>

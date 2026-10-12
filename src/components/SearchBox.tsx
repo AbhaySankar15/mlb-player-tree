@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { GraphData } from '../types/graph'
+import { PlayerAvatar } from './Badges'
 import { buildSearchIndex, search } from '../lib/search'
 
 interface Props {
@@ -83,8 +84,11 @@ export default function SearchBox({ data, onSelect }: Props) {
               onMouseEnter={() => setActive(i)}
               onMouseDown={(e) => { e.preventDefault(); choose(i) }}
             >
-              <span className="sr-name">{r.name}</span>
-              <span className="sr-meta">{r.years} · {r.degree.toLocaleString('en-US')} teammates · {r.id}</span>
+              <PlayerAvatar id={r.id} name={r.name} size={30} />
+              <span className="sr-text">
+                <span className="sr-name">{r.name}</span>
+                <span className="sr-meta">{r.years} · {r.degree.toLocaleString('en-US')} teammates · {r.id}</span>
+              </span>
             </li>
           ))}
         </ul>

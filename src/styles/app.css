@@ -18,7 +18,7 @@ html, body, #root { margin:0; height:100%; background:var(--bg); color:var(--tex
 .search-results { position:absolute; left:0; right:0; top:calc(100% + 4px); margin:0; padding:4px; list-style:none; z-index:5;
   background:#0a0f20; border:1px solid var(--line); border-radius:8px; max-height:340px; overflow:auto;
   box-shadow:0 8px 24px rgba(0,0,0,.45); }
-.search-results li { display:flex; flex-direction:column; padding:7px 9px; border-radius:5px; cursor:pointer; }
+.search-results li { display:flex; flex-direction:row; align-items:center; gap:10px; padding:7px 9px; border-radius:5px; cursor:pointer; }
 .search-results li.active { background:rgba(255,210,63,.14); }
 .search-results .sr-name { font-size:14px; font-weight:600; }
 .search-results .sr-meta { font-size:11px; color:var(--muted); }
@@ -97,3 +97,14 @@ dt { color:var(--muted); } dd { margin:0; text-align:right; font-weight:600; }
   .legend { right:8px; top:70px; bottom:auto; padding:6px 8px; }
   .header h1 { font-size:17px; }
 }
+
+.sr-text { display:flex; flex-direction:column; min-width:0; }
+.avatar { display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-weight:700; letter-spacing:.02em; flex:none; user-select:none; }
+.team-badge { display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:18px; padding:0 4px; margin-right:6px; border-radius:4px;
+  font-size:9.5px; font-weight:700; letter-spacing:.04em; vertical-align:middle; }
+.chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.chip { font-size:10.5px; padding:2px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+.chip-negro { border-color:#c08b3a; color:#f0c987; background:rgba(192,139,58,.12); }
+.panel-title { display:flex; align-items:center; gap:10px; min-width:0; }
+.drawer-head { align-items:center; }
+.drawer-title { flex:1; min-width:0; }

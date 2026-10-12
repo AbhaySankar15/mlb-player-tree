@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { GraphData } from '../types/graph'
 import type { Profile, StatRow, TeamsData } from '../types/profile'
 import { loadProfile } from '../lib/profiles'
+import { LeagueChips, PlayerAvatar, TeamBadge } from './Badges'
+import { depthColor } from '../lib/colors'
 import {
   battingRates, compressYears, fmtDec2, fmtHeight, fmtInt, fmtIP, fmtRate, pitchingRates, statObject, totals,
 } from '../lib/stats'
@@ -46,9 +48,11 @@ export default function ProfileDrawer({ data, selected, onClose }: Props) {
   return (
     <aside className="drawer" aria-label={`Profile of ${name}`}>
       <div className="drawer-head">
-        <div>
+        <PlayerAvatar id={id} name={name} size={52} ringColor={depthColor(data.players.depth[selected])} />
+        <div className="drawer-title">
           <h2>{name}</h2>
           <div className="drawer-sub">{data.players.debut[selected]}–{data.players.final[selected]} · {id}</div>
+          <LeagueChips leagues={data.players.leagues[selected]} />
         </div>
         <button className="btn small" onClick={onClose} aria-label="Close profile">Close</button>
       </div>
@@ -88,11 +92,11 @@ function ProfileBody({ data, selected, profile, teams }: { data: GraphData; sele
   }, [profile, data.teamSeasons, teams])
 
   const teamGroups = useMemo(() => {
-    const m = new Map<string, { name: string; lg: Set<string>; years: number[]; g: number; latest: number }>()
+    const m = new Map<string, { teamId: string; name: string; lg: Set<string>; years: number[]; g: number; latest: number }>()
     for (const s of seasons) {
       const key = s.ts.team + '|' + s.ts.lg
       const nm = teams.name[s.tsi] || s.ts.team
-      const e = m.get(key) ?? { name: nm, lg: new Set<string>(), years: [], g: 0, latest: 0 }
+      const e = m.get(key) ?? { teamId: s.ts.team, name: nm, lg: new Set<string>(), years: [], g: 0, latest: 0 }
       e.years.push(s.ts.year); e.lg.add(s.ts.lg); e.g += s.g ?? 0
       if (s.ts.year >= e.latest) { e.latest = s.ts.year; e.name = nm }
       m.set(key, e)
@@ -132,7 +136,7 @@ function ProfileBody({ data, selected, profile, teams }: { data: GraphData; sele
         <thead><tr><th>Team</th><th>Years</th><th className="n">G</th></tr></thead>
         <tbody>
           {teamGroups.map((t, i) => (
-            <tr key={i}><td>{t.name} <span className="lg">{[...t.lg].join('/')}</span></td><td>{compressYears(t.years)}</td><td className="n">{fmtInt(t.g)}</td></tr>
+            <tr key={i}><td><TeamBadge teamId={t.teamId} /> {t.name} <span className="lg">{[...t.lg].join('/')}</span></td><td>{compressYears(t.years)}</td><td className="n">{fmtInt(t.g)}</td></tr>
           ))}
         </tbody>
       </table>
@@ -177,7 +181,7 @@ function ProfileBody({ data, selected, profile, teams }: { data: GraphData; sele
               return (
                 <tr key={s.tsi}>
                   <td>{s.ts.year}{s.statsOnly && <sup title="Stats recorded, but no Appearances row in the source, so this team-season is not used for teammate links"> *</sup>}</td>
-                  <td>{teams.name[s.tsi] || s.ts.team} <span className="lg">{s.ts.lg}</span></td>
+                  <td><TeamBadge teamId={s.ts.team} /> {teams.name[s.tsi] || s.ts.team} <span className="lg">{s.ts.lg}</span></td>
                   <td className="n">{fmtInt(s.g)}</td>
                   {hasBat && <td>{!bs ? '—' : (bs.AB ?? 0) > 0 ? `${fmtRate(br!.AVG)} · ${fmtInt(bs.HR)} HR · ${fmtInt(bs.RBI)} RBI` : `${fmtInt(bs.AB ?? 0)} AB`}</td>}
                   {hasPit && <td>{!ps ? '—' : `${fmtInt(ps.W)}–${fmtInt(ps.L)} · ${fmtDec2(pr!.ERA)} ERA · ${fmtIP(ps.IPouts)} IP · ${fmtInt(ps.SO)} SO`}</td>}
